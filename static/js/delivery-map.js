@@ -28,10 +28,10 @@
             const zip = (feature.properties && feature.properties.ZIPCODE) || "";
             const home = zip === "78746";
             return {
-              color: home ? "#3d3229" : "#8a6a4f",
+              color: home ? "#1f6b3a" : "#2d8a4e",
               weight: home ? 2.4 : 1.4,
-              fillColor: home ? "#c4a574" : "#e6d3bc",
-              fillOpacity: home ? 0.72 : 0.55,
+              fillColor: home ? "#3cb371" : "#7dce8f",
+              fillOpacity: home ? 0.55 : 0.42,
             };
           },
           onEachFeature: function (feature, lyr) {
