@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Pay — {{ business_name }}{% endblock %}
+{% block head %}
+  <script src="https://js.stripe.com/dahlia/stripe.js"></script>
+{% endblock %}
+{% block content %}
+  <h1>Checkout</h1>
+  <p class="lead">
+    Order <strong>{{ order_number }}</strong> · Total {{ total_cents | money }}
+  </p>
+  <p class="lead" style="font-size: 0.95rem;">
+    Pay securely below — you stay on Scratch Cookie Cottage. Do not close this page until payment finishes.
+  </p>
+
+  <div id="checkout"></div>
+  <div id="pay-error" class="flash error" style="display:none; margin-top: 16px;"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (async function () {
+    const stripe = Stripe({{ publishable_key | tojson }});
+    const checkout = await stripe.createEmbeddedCheckoutPage({
+      fetchClientSecret: async () => {{ client_secret | tojson }},
+    });
+    checkout.mount("#checkout");
+  })().catch(function (err) {
+    const el = document.getElementById("pay-error");
+    el.style.display = "block";
+    el.textContent = err.message || "Could not load payment form.";
+  });
+</script>
+{% endblock %}

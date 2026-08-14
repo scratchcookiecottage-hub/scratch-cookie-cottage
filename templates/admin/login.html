@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Admin login{% endblock %}
+{% block content %}
+  <h1>Admin</h1>
+  <form class="order-form" method="post" style="max-width: 420px; margin: 0 auto;">
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password">
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn">Log in</button>
+    </div>
+  </form>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Print orders — {{ batch_label }}{% endblock %}
+{% block content %}
+  <div class="no-print btn-row" style="justify-content:flex-start; margin-bottom:20px;">
+    <button class="btn" onclick="window.print()">Print</button>
+    <a class="btn secondary" href="{{ url_for('admin_dashboard', batch=selected_batch) }}">Back</a>
+  </div>
+
+  <div class="print-sheet">
+    <h1>Order list</h1>
+    <p class="print-meta">
+      {{ business_name }} · {{ batch_label }} · {{ orders|length }} order(s)
+      · Printed {{ printed_at }}
+    </p>
+
+    {% if not orders %}
+      <p>No orders.</p>
+    {% endif %}
+
+    {% for o in orders %}
+    <div class="print-order">
+      <h3>{{ loop.index }}. {{ o.customer_name }} — {{ o.order_number }}</h3>
+      <p style="margin:4px 0;">
+        <strong>Phone:</strong> {{ o.customer_phone }}
+        &nbsp;·&nbsp; <strong>Email:</strong> {{ o.customer_email }}
+      </p>
+      <p style="margin:4px 0;">
+        <strong>
+          {% if o.pickup_date %}
+            {{ o.pickup_date | pickup_date_fmt | upper }}
+          {% elif o.pickup_day == 'friday' %}FRIDAY ({{ pickup_dates.friday }})
+          {% elif o.pickup_day == 'saturday' %}SATURDAY ({{ pickup_dates.saturday }})
+          {% else %}DAY TBD{% endif %}
+        </strong>
+        &nbsp;·&nbsp;
+        <strong>{{ o.fulfillment | capitalize }}</strong>
+        {% if o.address %} — {{ o.address }}{% endif %}
+        &nbsp;·&nbsp;
+        {% if o.payment_status == 'paid' %}PAID
+        {% elif o.payment_status == 'pay_at_pickup' %}COLLECT PAYMENT ({{ o.total_cents | money }})
+        {% else %}{{ o.payment_status | upper }} ({{ o.total_cents | money }}){% endif %}
+      </p>
+      <ul style="margin:8px 0;">
+        {% for item in o['items'] %}
+          {% if item.kind == 'six_pack_cookie' %}
+            <li>{{ item.qty }} × {{ item.name }}</li>
+          {% elif item.kind == 'six_pack_fee' %}
+            <li><strong>{{ item.name }}</strong> ({{ item.line_total_cents | money }})</li>
+          {% elif item.line_total_cents > 0 %}
+            <li>{{ item.qty }} × {{ item.name }}</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+      {% if o.notes %}
+        <p style="margin:4px 0;"><strong>Notes:</strong> {{ o.notes }}</p>
+      {% endif %}
+      <p style="margin:4px 0;"><strong>Total:</strong> {{ o.total_cents | money }} · Status: {{ o.status }}</p>
+    </div>
+    {% endfor %}
+  </div>
+{% endblock %}

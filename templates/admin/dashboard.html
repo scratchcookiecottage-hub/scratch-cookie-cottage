@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Orders — Admin{% endblock %}
+{% block content %}
+  <h1>Weekly batch</h1>
+
+  <div class="admin-toolbar no-print">
+    <form method="get" action="{{ url_for('admin_dashboard') }}" style="display:flex; gap:10px; align-items:center;">
+      <label for="batch" style="font-weight:400;">Batch week</label>
+      <select id="batch" name="batch" onchange="this.form.submit()">
+        {% if not weeks %}
+          <option value="{{ selected_batch }}">{{ batch_label }}</option>
+        {% endif %}
+        {% for w in weeks %}
+          <option value="{{ w }}" {% if w == selected_batch %}selected{% endif %}>
+            {{ batch_week_label(w) }} ({{ w }})
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+    <div class="btn-row" style="margin:0;">
+      <a class="btn secondary" href="{{ url_for('admin_print_orders', batch=selected_batch) }}" target="_blank">Print order list</a>
+      <a class="btn secondary" href="{{ url_for('admin_print_counts', batch=selected_batch) }}" target="_blank">Print bake sheet</a>
+      <a class="btn secondary" href="{{ url_for('admin_logout') }}">Log out</a>
+    </div>
+  </div>
+
+  <p class="lead">{{ batch_label }} · {{ orders|length }} order(s)</p>
+
+  <div class="counts-box">
+    <h2 style="text-align:left; font-size:1.5rem; margin-bottom:12px;">Cookie counts (individual cookies to bake)</h2>
+    <ul>
+      {% for row in count_rows %}
+        <li><span>{{ row.name }}</span><strong>{{ row.qty }}</strong></li>
+      {% endfor %}
+      <li><span>Total cookies</span><strong>{{ total_cookies }}</strong></li>
+    </ul>
+    <ul style="margin-top:16px; border-top:1px solid var(--cream-dark); padding-top:8px;">
+      <li><span>Individual singles sold</span><strong>{{ products.singles }}</strong></li>
+      <li><span>6-packs sold</span><strong>{{ products.six_packs }}</strong></li>
+      <li><span>Friday pickups/deliveries</span><strong>{{ pickup_friday_orders }}</strong></li>
+      <li><span>Saturday pickups/deliveries</span><strong>{{ pickup_saturday_orders }}</strong></li>
+    </ul>
+  </div>
+
+  {% if not orders %}
+    <div class="panel">No confirmed orders for this batch yet.</div>
+  {% else %}
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Day</th>
+          <th>Fulfillment</th>
+          <th>Pay</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td>
+            <strong>{{ o.order_number }}</strong><br>
+            <span style="color:var(--muted); font-size:0.8rem;">{{ o.created_at | localdt }}</span>
+          </td>
+          <td>
+            {{ o.customer_name }}<br>
+            <span style="color:var(--muted); font-size:0.85rem;">{{ o.customer_phone }}<br>{{ o.customer_email }}</span>
+          </td>
+          <td>
+            {% for item in o['items'] %}
+              {% if item.kind != 'six_pack_fee' or item.line_total_cents > 0 %}
+                {% if item.kind == 'six_pack_cookie' %}
+                  {{ item.qty }}× {{ item.name }}{% if not loop.last %}<br>{% endif %}
+                {% elif item.kind == 'six_pack_fee' %}
+                  {{ item.name }}{% if not loop.last %}<br>{% endif %}
+                {% else %}
+                  {{ item.qty }}× {{ item.name }}{% if not loop.last %}<br>{% endif %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {% if o.notes %}<br><em style="color:var(--muted);">{{ o.notes }}</em>{% endif %}
+          </td>
+          <td>
+            {% if o.pickup_date %}
+              {{ o.pickup_date | pickup_date_fmt }}
+            {% elif o.pickup_day == 'friday' %}
+              Fri · {{ pickup_dates.friday_short }}
+            {% elif o.pickup_day == 'saturday' %}
+              Sat · {{ pickup_dates.saturday_short }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>
+            {{ o.fulfillment | capitalize }}
+            {% if o.address %}<br><span style="font-size:0.85rem;">{{ o.address }}</span>{% endif %}
+          </td>
+          <td>
+            {% if o.payment_status == 'paid' %}
+              <span class="badge paid">Paid</span>
+            {% elif o.payment_status == 'pay_at_pickup' %}
+              <span class="badge pickup-pay">Pay later</span>
+            {% else %}
+              <span class="badge">{{ o.payment_status }}</span>
+            {% endif %}
+          </td>
+          <td>{{ o.total_cents | money }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin_set_status', order_id=o.id) }}">
+              <input type="hidden" name="batch" value="{{ selected_batch }}">
+              <select name="status" onchange="this.form.submit()">
+                {% for s in ['new','confirmed','baked','picked_up','delivered','cancelled'] %}
+                  <option value="{{ s }}" {% if o.status == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+{% endblock %}

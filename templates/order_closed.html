@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Order cookies — {{ business_name }}{% endblock %}
+{% block content %}
+  {# Cookie orders are always open; this page is kept as a soft redirect fallback. #}
+  <h1>Order Cookies</h1>
+  <div class="banner open">{{ message or window_message }}</div>
+  <div class="panel">
+    <p>
+      You can order cookies anytime and choose a Friday or Saturday pickup
+      on the calendar. Same-week dates close after {{ cutoff_display() }} CST.
+    </p>
+  </div>
+  <div class="btn-row">
+    <a class="btn" href="{{ url_for('order') }}">Continue to order</a>
+    <a class="btn secondary" href="{{ url_for('merch') }}">Shop Merch</a>
+  </div>
+{% endblock %}

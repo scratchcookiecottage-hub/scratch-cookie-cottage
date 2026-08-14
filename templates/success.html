@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Order confirmed — {{ business_name }}{% endblock %}
+{% block content %}
+  <h1>Thank you!</h1>
+  <div class="banner open">Your order is confirmed.</div>
+
+  <div class="panel" style="text-align: left;">
+    <p><strong>Order #:</strong> {{ order.order_number }}</p>
+    <p><strong>Batch:</strong> {{ batch_week_label(order.batch_week) }}</p>
+    <p><strong>Name:</strong> {{ order.customer_name }}</p>
+    <p>
+      <strong>
+        {% if order.fulfillment == 'delivery' %}Delivery day:{% else %}Pickup day:{% endif %}
+      </strong>
+      {{ order | order_pickup_display }}
+    </p>
+    <p><strong>Fulfillment:</strong> {{ order.fulfillment | capitalize }}</p>
+    {% if order.fulfillment == 'delivery' and order.address %}
+      <p><strong>Address:</strong> {{ order.address }}</p>
+    {% endif %}
+    <p><strong>Payment:</strong>
+      {% if order.payment_status == 'paid' %}
+        Paid online — a receipt has been (or will be) emailed to {{ order.customer_email }}
+      {% elif order.payment_status == 'pay_at_pickup' %}
+        Pay at {{ order.fulfillment }} (placed before card-only checkout)
+      {% else %}
+        {{ order.payment_status }}
+      {% endif %}
+    </p>
+    <hr style="border: none; border-top: 1px solid var(--cream-dark); margin: 16px 0;">
+    <ul style="padding-left: 1.2rem;">
+      {% for item in order['items'] %}
+        {% if item.line_total_cents > 0 or item.kind == 'six_pack_cookie' %}
+          <li>
+            {% if item.kind == 'six_pack_cookie' %}
+              {{ item.qty }} × {{ item.name }}
+            {% else %}
+              {{ item.qty }} × {{ item.name }} ({{ item.line_total_cents | money }})
+            {% endif %}
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+    {% if order.delivery_fee_cents %}
+      <p>Delivery fee: {{ order.delivery_fee_cents | money }}</p>
+    {% endif %}
+    <p style="font-size: 1.2rem; font-weight: 700;">Total: {{ order.total_cents | money }}</p>
+  </div>
+
+  <div class="btn-row">
+    <a class="btn secondary" href="{{ url_for('index') }}">Back home</a>
+    <a class="btn secondary" href="{{ url_for('merch') }}">Shop Merch</a>
+  </div>
+{% endblock %}

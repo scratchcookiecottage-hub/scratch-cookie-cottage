@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ business_name }} — Our Cookies{% endblock %}
+{% block content %}
+  <h1>Our Cookies</h1>
+  <p class="lead">
+    Handcrafted cookies · ${{ '%.2f'|format(price_individual / 100) }} each
+    · Build-your-own 6-pack ${{ '%.2f'|format(price_six_pack / 100) }}
+  </p>
+
+  <div class="banner {{ 'open' if same_week_open else 'closed' }}">
+    {{ window_message }}
+  </div>
+
+  <div class="cookie-grid">
+    {% for cookie_id, cookie in catalog.items() %}
+    <div class="cookie-card">
+      <div class="cookie-photo">
+        {% if cookie.img_default %}
+          <img class="img-default" src="{{ cookie.img_default }}" alt="{{ cookie.name }}">
+          {% if cookie.img_hover %}
+            <img class="img-hover" src="{{ cookie.img_hover }}" alt="{{ cookie.name }} (alternate)">
+          {% endif %}
+        {% else %}
+          <div class="photo-placeholder">{{ cookie.name }}</div>
+        {% endif %}
+      </div>
+      <div class="cookie-body">
+        <h3 class="script">{{ cookie.name }}</h3>
+        <p>{{ cookie.description }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="panel">
+    <h2>How Pre-Ordering Works</h2>
+    <p>
+      Order <strong>anytime</strong> and pick a <strong>Friday or Saturday</strong>
+      for pickup on the calendar. Payment is due by card when you place the order.
+    </p>
+    <p>
+      Weekly bake cutoff is <strong>{{ cutoff_display() }} (CST)</strong>.
+      Order before then to unlock <strong>this weekend’s</strong> Friday or Saturday.
+      After the cutoff, same-week dates are greyed out — choose a future weekend instead.
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>Pricing</h2>
+    <p><strong>Individual cookies</strong> — {{ price_individual | money }} each</p>
+    <p><strong>Build-your-own 6-pack</strong> (half dozen) — {{ price_six_pack | money }}</p>
+    <p>Mix any of our four flavors in your 6-pack.</p>
+  </div>
+
+  <div class="btn-row">
+    <a class="btn" href="{{ url_for('order') }}">Order Cookies</a>
+    <a class="btn secondary" href="{{ url_for('merch') }}">Shop Merch</a>
+  </div>
+{% endblock %}

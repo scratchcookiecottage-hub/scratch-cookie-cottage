@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Merch — {{ business_name }}{% endblock %}
+{% block content %}
+  <h1>Shop Merch</h1>
+  <p class="lead">
+    Tees, hoodies, and more — printed &amp; shipped by Printify.
+    Available <strong>24/7</strong>, separate from the cookie order window.
+  </p>
+
+  <div class="panel">
+    <h2>Scratch Cookie Cottage Merch</h2>
+    <p>
+      Browse and check out on our Printify store. Payment and shipping are handled there —
+      you’ll get tracking and updates from Printify / the print provider.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="{{ shop_url }}" target="_blank" rel="noopener">
+        Open Merch Shop
+      </a>
+    </div>
+  </div>
+
+  {% if api_enabled %}
+  <div class="panel">
+    <p class="section-note" style="margin:0;">
+      Printify API is configured — deeper on-site merch checkout can be enabled next.
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="btn-row">
+    <a class="btn secondary" href="{{ url_for('index') }}">Back to cookies</a>
+  </div>
+{% endblock %}

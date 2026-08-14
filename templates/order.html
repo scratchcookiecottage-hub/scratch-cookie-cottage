@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}Order — {{ business_name }}{% endblock %}
+{% block content %}
+  <h1>Place Your Order</h1>
+  <p class="lead">
+    Order anytime. Choose a Friday or Saturday for pickup on the calendar below.
+  </p>
+
+  <div class="banner {{ 'open' if same_week.same_week_open else 'closed' }}">
+    {{ window_message }}
+  </div>
+
+  <form
+    id="order-form"
+    class="order-form"
+    method="post"
+    action="{{ url_for('order') }}"
+    data-price-individual="{{ price_individual }}"
+    data-price-six-pack="{{ price_six_pack }}"
+    data-delivery-fee="{{ delivery_fee }}"
+    data-pickup-slots='{{ pickup_slots_json | tojson }}'
+    data-selected-pickup="{{ form.get('pickup_date', '') if form else '' }}"
+  >
+    <!-- Build your own 6-pack -->
+    <div class="form-section">
+      <h3>Build-your-own 6-pack — {{ price_six_pack | money }}</h3>
+      <p class="section-note">
+        Pick any mix of flavors. Total must be a multiple of 6
+        (6 = one pack, 12 = two packs, …).
+      </p>
+      {% for cookie_id, cookie in catalog.items() %}
+      <div class="qty-row">
+        <label for="pack_{{ cookie_id }}">
+          {{ cookie.name }}
+        </label>
+        <div class="stepper">
+          <button type="button" class="step-btn" data-step="pack_{{ cookie_id }}" data-delta="-1" aria-label="Decrease">−</button>
+          <input
+            type="number"
+            id="pack_{{ cookie_id }}"
+            name="pack_{{ cookie_id }}"
+            min="0"
+            max="100"
+            step="1"
+            value="{{ form.get('pack_' + cookie_id, 0) if form else 0 }}"
+          >
+          <button type="button" class="step-btn" data-step="pack_{{ cookie_id }}" data-delta="1" aria-label="Increase">+</button>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="pack-status">
+        <strong id="pack-sum">0 / 6 selected</strong>
+        <span id="pack-hint" class="pack-hint">Add 6 cookies across flavors for one half-dozen box.</span>
+      </div>
+    </div>
+
+    <!-- Individuals -->
+    <div class="form-section">
+      <h3>Individual cookies — {{ price_individual | money }} each</h3>
+      <p class="section-note">Add any number of single cookies (optional, on top of a 6-pack).</p>
+      {% for cookie_id, cookie in catalog.items() %}
+      <div class="qty-row">
+        <label for="single_{{ cookie_id }}">
+          {{ cookie.name }}
+          <span class="meta">{{ price_individual | money }} each</span>
+        </label>
+        <div class="stepper">
+          <button type="button" class="step-btn" data-step="single_{{ cookie_id }}" data-delta="-1" aria-label="Decrease">−</button>
+          <input
+            type="number"
+            id="single_{{ cookie_id }}"
+            name="single_{{ cookie_id }}"
+            min="0"
+            max="100"
+            step="1"
+            value="{{ form.get('single_' + cookie_id, 0) if form else 0 }}"
+          >
+          <button type="button" class="step-btn" data-step="single_{{ cookie_id }}" data-delta="1" aria-label="Increase">+</button>
+        </div>
+      </div>
+      {% endfor %}
+      <p id="single-sum" class="section-note" style="margin-top:12px;">No individual cookies selected</p>
+    </div>
+
+    <div class="form-section">
+      <h3>Your info</h3>
+      <div class="field">
+        <label for="customer_name">Name</label>
+        <input type="text" id="customer_name" name="customer_name" required
+               value="{{ form.get('customer_name', '') if form else '' }}">
+      </div>
+      <div class="field">
+        <label for="customer_email">Email</label>
+        <input type="email" id="customer_email" name="customer_email" required
+               value="{{ form.get('customer_email', '') if form else '' }}">
+      </div>
+      <div class="field">
+        <label for="customer_phone">Phone</label>
+        <input type="tel" id="customer_phone" name="customer_phone" required
+               value="{{ form.get('customer_phone', '') if form else '' }}">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Pickup date</h3>
+      <p class="section-note">
+        Select a <strong>Friday</strong> or <strong>Saturday</strong>.
+        Same-week dates lock after <strong>{{ cutoff_display() }} CST</strong> —
+        those cells appear greyed out.
+      </p>
+
+      <input type="hidden" name="pickup_date" id="pickup_date" value="{{ form.get('pickup_date', '') if form else '' }}">
+
+      <div class="pickup-calendar" id="pickup-calendar" aria-label="Pickup calendar">
+        <div class="cal-header">
+          <button type="button" class="step-btn" id="cal-prev" aria-label="Previous month">‹</button>
+          <h4 id="cal-month-label" class="cal-month-label"></h4>
+          <button type="button" class="step-btn" id="cal-next" aria-label="Next month">›</button>
+        </div>
+        <div class="cal-weekdays">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+          <span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend">
+          <span><i class="swatch available"></i> Available</span>
+          <span><i class="swatch locked"></i> Unavailable / past cutoff</span>
+          <span><i class="swatch selected"></i> Selected</span>
+        </div>
+        <p id="pickup-selected-label" class="pack-status" style="margin-top:14px;">
+          No pickup date selected
+        </p>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Pickup or delivery</h3>
+      <div class="radio-row">
+        <label>
+          <input type="radio" name="fulfillment" value="pickup"
+            {% if not form or form.get('fulfillment', 'pickup') == 'pickup' %}checked{% endif %}>
+          Pickup
+        </label>
+        <label>
+          <input type="radio" name="fulfillment" value="delivery"
+            {% if form and form.get('fulfillment') == 'delivery' %}checked{% endif %}>
+          Local delivery
+          {% if delivery_fee %}(+{{ delivery_fee | money }}){% endif %}
+        </label>
+      </div>
+      <div id="delivery-fields">
+        <div class="field">
+          <label for="address">Delivery address</label>
+          <textarea id="address" name="address" placeholder="Street, city, zip">{{ form.get('address', '') if form else '' }}</textarea>
+        </div>
+      </div>
+      <div class="field">
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" name="notes" placeholder="Gate code, allergy note, etc.">{{ form.get('notes', '') if form else '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Payment</h3>
+      {% if stripe_enabled() %}
+      <p class="section-note">
+        Payment is due now by card. You’ll enter card details on the next screen.
+        A receipt is emailed after checkout.
+      </p>
+      {% else %}
+      <p class="section-note">
+        Online checkout is temporarily unavailable. Orders cannot be placed until card payment is configured.
+      </p>
+      {% endif %}
+
+      <div class="totals">
+        <div class="line"><span>Subtotal</span><span id="subtotal-display">$0.00</span></div>
+        <div class="line"><span>Delivery</span><span id="delivery-display">$0.00</span></div>
+        <div class="line grand"><span>Total</span><span id="total-display">$0.00</span></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      {% if stripe_enabled() %}
+      <button type="submit" class="btn">Continue to payment</button>
+      {% else %}
+      <button type="submit" class="btn" disabled>Checkout unavailable</button>
+      {% endif %}
+    </div>
+  </form>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/order.js') }}"></script>
+{% endblock %}

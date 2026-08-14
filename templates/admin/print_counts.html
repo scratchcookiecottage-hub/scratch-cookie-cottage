@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Print bake sheet — {{ batch_label }}{% endblock %}
+{% block content %}
+  <div class="no-print btn-row" style="justify-content:flex-start; margin-bottom:20px;">
+    <button class="btn" onclick="window.print()">Print</button>
+    <a class="btn secondary" href="{{ url_for('admin_dashboard', batch=selected_batch) }}">Back</a>
+  </div>
+
+  <div class="print-sheet">
+    <h1>Bake sheet — cookie counts</h1>
+    <p class="print-meta">
+      {{ business_name }} · {{ batch_label }} · {{ order_count }} order(s) · Printed {{ printed_at }}
+    </p>
+
+    <ul class="counts-box big-counts" style="list-style:none; padding:20px;">
+      {% for row in count_rows %}
+        <li>
+          <span>{{ row.name }}</span>
+          <strong>{{ row.qty }} cookies</strong>
+        </li>
+      {% endfor %}
+      <li style="border-top: 2px solid #3d3229; margin-top: 8px; padding-top: 16px;">
+        <span>TOTAL COOKIES</span>
+        <strong>{{ total_cookies }}</strong>
+      </li>
+    </ul>
+
+    <p style="margin-top: 20px; font-size: 1.1rem;">
+      <strong>6-packs:</strong> {{ products.six_packs }}
+      &nbsp;·&nbsp;
+      <strong>Singles:</strong> {{ products.singles }}
+    </p>
+
+    <p style="margin-top: 32px; color: #555;">
+      Tip: use this sheet for shopping and batching. Use “Print order list” for packing/pickup by day.
+    </p>
+  </div>
+{% endblock %}

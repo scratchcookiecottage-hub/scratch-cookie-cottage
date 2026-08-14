@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/*.db
+.DS_Store
+android-admin/.gradle/
+android-admin/.idea/
+android-admin/local.properties
+android-admin/app/build/
+android-admin/build/
