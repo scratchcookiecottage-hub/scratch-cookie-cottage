@@ -71,13 +71,13 @@ class Config:
                 "name": "Macadamia White Chocolate",
                 "description": "Buttery macadamia nuts and smooth white chocolate in every bite.",
                 "img_default": "images/macadamia.jpg",
-                "img_hover": "images/macadamia_alt.jpg",
+                "img_hover": "",
             },
             "salted_caramel": {
                 "name": "Salted Caramel Chocolate Pecan",
                 "description": "Gooey caramel, chocolate, and toasted pecans with a kiss of sea salt.",
                 "img_default": "images/salted_caramel.jpg",
-                "img_hover": "images/salted_caramel_alt.jpg",
+                "img_hover": "",
             },
             "peanut_butter": {
                 "name": "White Miso Peanut Butter",
