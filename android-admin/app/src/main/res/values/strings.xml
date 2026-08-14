@@ -4,11 +4,11 @@
     <string name="settings_title">Site address</string>
     <string name="settings_blurb">This app opens the Scratch Cookie Cottage admin portal. Enter the website address — no /admin at the end.</string>
     <string name="site_url_hint">Website address</string>
-    <string name="settings_examples">At home on Wi‑Fi, use your computer’s address, for example http://192.168.1.249:5000\n\nAfter the site is hosted, use https://www.scratchcookiecottage.com</string>
+    <string name="settings_examples">Live site:\nhttps://scratchcookiecottage.pythonanywhere.com\n\nAfter the Squarespace domain is connected:\nhttps://www.scratchcookiecottage.com</string>
     <string name="save">Save</string>
     <string name="saved">Saved</string>
     <string name="invalid_url">Enter a full address starting with http:// or https://</string>
-    <string name="cannot_reach_site">Could not reach the site. Check the address and that the computer is running the server on the same Wi‑Fi.</string>
+    <string name="cannot_reach_site">Could not reach the site. Check the address and your internet connection.</string>
     <string name="refresh">Refresh</string>
     <string name="admin_home">Admin home</string>
 </resources>

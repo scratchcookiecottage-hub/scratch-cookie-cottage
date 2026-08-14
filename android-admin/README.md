@@ -16,21 +16,10 @@ The app is installed only on that phone. It is not on the Play Store.
 
 ## First launch
 
-Enter the website address (no `/admin` at the end).
+The app opens the live site by default:
 
-| Where the site is running | Address to type |
-|---|---|
-| This computer, phone on the same Wi‑Fi | `http://192.168.1.249:5000` (your IP may change — `start.bat` prints the current one) |
-| After the site is hosted | `https://www.scratchcookiecottage.com` |
+`https://scratchcookiecottage.pythonanywhere.com`
 
-Then log in with the same admin username and password as the website.
+Log in with the same admin username and password as the website. The three-dot menu has Refresh, Admin home, and Site address.
 
-The three-dot menu has Refresh, Admin home, and Site address.
-
-## Phone on home Wi‑Fi
-
-1. Start the site with `start.bat` and leave that window open.
-2. Phone and PC must be on the same Wi‑Fi.
-3. Use the **Admin (phone Wi‑Fi)** URL that `start.bat` prints.
-
-Windows may ask to allow Python through the firewall — choose **Private networks**.
+When the Squarespace domain is connected, change Site address to `https://www.scratchcookiecottage.com`.

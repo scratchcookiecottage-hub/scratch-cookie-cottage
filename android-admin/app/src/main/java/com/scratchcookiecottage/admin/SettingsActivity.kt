@@ -18,7 +18,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         val existing = Prefs.baseUrl(this)
-        binding.urlInput.setText(existing.ifEmpty { "http://192.168.1.249:5000" })
+        binding.urlInput.setText(existing.ifEmpty { Prefs.DEFAULT_URL })
 
         binding.saveButton.setOnClickListener {
             val raw = binding.urlInput.text?.toString().orEmpty().trim()
