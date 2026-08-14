@@ -151,6 +151,23 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
   animation: cookieFadeB 8s ease-in-out infinite;
 }
 
+.cookie-grid .cookie-card:nth-child(1) .has-alt img {
+  animation-duration: 8.2s;
+  animation-delay: 0s;
+}
+.cookie-grid .cookie-card:nth-child(2) .has-alt img {
+  animation-duration: 9.6s;
+  animation-delay: 2.1s;
+}
+.cookie-grid .cookie-card:nth-child(3) .has-alt img {
+  animation-duration: 7.4s;
+  animation-delay: 4.3s;
+}
+.cookie-grid .cookie-card:nth-child(4) .has-alt img {
+  animation-duration: 10.3s;
+  animation-delay: 1.2s;
+}
+
 @keyframes cookieFadeA {
   0%, 38% { opacity: 1; }
   50%, 88% { opacity: 0; }

@@ -65,24 +65,24 @@ class Config:
                 "name": "Brown Butter Chocolate Chip",
                 "description": "Rich, nutty brown butter with classic chocolate chips. Soft centers, golden edges.",
                 "img_default": "images/chocolate_chip.jpg",
-                "img_hover": "",
+                "img_hover": "images/chocolate_chip_alt.jpg",
             },
             "macadamia": {
                 "name": "Macadamia White Chocolate",
                 "description": "Buttery macadamia nuts and smooth white chocolate in every bite.",
                 "img_default": "images/macadamia.jpg",
-                "img_hover": "",
+                "img_hover": "images/macadamia_alt.jpg",
             },
             "salted_caramel": {
                 "name": "Salted Caramel Chocolate Pecan",
                 "description": "Gooey caramel, chocolate, and toasted pecans with a kiss of sea salt.",
                 "img_default": "images/salted_caramel.jpg",
-                "img_hover": "",
+                "img_hover": "images/salted_caramel_alt.jpg",
             },
             "peanut_butter": {
                 "name": "White Miso Peanut Butter",
                 "description": "Creamy peanut butter with a gentle savory depth from white miso.",
                 "img_default": "images/peanut_butter.jpg",
-                "img_hover": "",
+                "img_hover": "images/peanut_butter_alt.jpg",
             },
         }
