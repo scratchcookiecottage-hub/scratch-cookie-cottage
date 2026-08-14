@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ business_name }}{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {% block head %}{% endblock %}
@@ -11,7 +13,9 @@
 <body>
   <div class="wrap">
     <header class="site-header no-print">
-      <a class="logo" href="{{ url_for('index') }}">{{ business_name }}</a>
+      <a class="logo" href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ business_name }}">
+      </a>
       <nav class="nav">
         <a href="{{ url_for('index') }}">Home</a>
         <a href="{{ url_for('order') }}">Order Cookies</a>

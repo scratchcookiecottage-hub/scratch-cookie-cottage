@@ -44,10 +44,20 @@ a { color: var(--brown); }
 }
 
 .logo {
-  font-family: var(--script);
-  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
   text-decoration: none;
   color: var(--brown);
+}
+
+.logo img {
+  display: block;
+  height: 72px;
+  width: auto;
+}
+
+@media (max-width: 640px) {
+  .logo img { height: 56px; }
 }
 
 .nav { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
