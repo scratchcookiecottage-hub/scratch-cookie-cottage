@@ -42,10 +42,9 @@
 
         const bounds = layer.getBounds();
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [48, 48], maxZoom: 10 });
-          map.setZoom(map.getZoom() - 1);
+          map.setView(bounds.getCenter(), 10);
         } else {
-          map.setView([30.28, -97.78], 10);
+          map.setView([30.30, -97.78], 10);
         }
       });
     })
