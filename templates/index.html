@@ -16,9 +16,9 @@
     <div class="cookie-card">
       <div class="cookie-photo">
         {% if cookie.img_default %}
-          <img class="img-default" src="{{ cookie.img_default }}" alt="{{ cookie.name }}">
+          <img class="img-default" src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}" alt="{{ cookie.name }}">
           {% if cookie.img_hover %}
-            <img class="img-hover" src="{{ cookie.img_hover }}" alt="{{ cookie.name }} (alternate)">
+            <img class="img-hover" src="{% if cookie.img_hover.startswith('http') %}{{ cookie.img_hover }}{% else %}{{ url_for('static', filename=cookie.img_hover) }}{% endif %}" alt="{{ cookie.name }} (alternate)">
           {% endif %}
         {% else %}
           <div class="photo-placeholder">{{ cookie.name }}</div>
