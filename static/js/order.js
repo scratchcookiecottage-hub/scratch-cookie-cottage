@@ -73,14 +73,67 @@
     }
   }
 
+  let allowedZips = [];
+  try {
+    allowedZips = JSON.parse(form.dataset.allowedZips || "[]");
+  } catch (e) {
+    allowedZips = [];
+  }
+
+  const zipInput = document.getElementById("delivery_zip");
+  const zipFeedback = document.getElementById("zip-feedback");
+
+  function digitsZip(value) {
+    return String(value || "").replace(/\D/g, "").slice(0, 5);
+  }
+
+  function checkZip() {
+    if (!zipFeedback) return;
+    if (fulfillment() !== "delivery") {
+      zipFeedback.textContent = "";
+      zipFeedback.className = "pack-hint";
+      return;
+    }
+    const zip = digitsZip(zipInput && zipInput.value);
+    if (zip.length < 5) {
+      zipFeedback.textContent = "Enter a 5-digit ZIP in our delivery area.";
+      zipFeedback.className = "pack-hint";
+      return;
+    }
+    if (allowedZips.indexOf(zip) !== -1) {
+      zipFeedback.textContent = zip + " is in our delivery area.";
+      zipFeedback.className = "pack-hint ok";
+    } else {
+      zipFeedback.textContent =
+        zip + " is outside our delivery area. Please choose pickup, or see the map.";
+      zipFeedback.className = "pack-hint warn";
+    }
+  }
+
   function syncDelivery() {
     if (!deliveryFields) return;
     if (fulfillment() === "delivery") {
       deliveryFields.classList.add("show");
+      if (zipInput) zipInput.required = true;
+      window.setTimeout(function () {
+        document.querySelectorAll(".delivery-map").forEach(function (el) {
+          if (el._leaflet_id && typeof L !== "undefined") {
+            const map = el._leaflet_map;
+            if (map) map.invalidateSize();
+          }
+        });
+      }, 200);
     } else {
       deliveryFields.classList.remove("show");
+      if (zipInput) zipInput.required = false;
     }
+    checkZip();
     recalc();
+  }
+
+  if (zipInput) {
+    zipInput.addEventListener("input", checkZip);
+    zipInput.addEventListener("change", checkZip);
   }
 
   fulfillmentInputs.forEach(function (el) {

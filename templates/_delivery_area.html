@@ -1,0 +1,12 @@
+<div class="delivery-area">
+  <div id="{{ map_id|default('delivery-map') }}" class="delivery-map" role="img" aria-label="Map of Austin delivery ZIP codes"></div>
+  <p class="section-note" style="margin-top:12px;">
+    We deliver to ZIP codes about <strong>20 minutes from 78746</strong> (West Lake Hills).
+    Pickup is available for any order.
+  </p>
+  <ul class="zip-list">
+    {% for zipcode, label in delivery_zips.items() %}
+      <li><strong>{{ zipcode }}</strong> — {{ label }}</li>
+    {% endfor %}
+  </ul>
+</div>

@@ -29,6 +29,34 @@ class Config:
     PRICE_INDIVIDUAL_CENTS = _int("PRICE_INDIVIDUAL_CENTS", 400)  # $4.00
     PRICE_SIX_PACK_CENTS = _int("PRICE_SIX_PACK_CENTS", 2000)  # $20.00
     DELIVERY_FEE_CENTS = _int("DELIVERY_FEE_CENTS", 0)
+    # Local delivery: zips about 20 minutes from 78746 (West Lake Hills).
+    DELIVERY_ZIPS = {
+        "78701": "Downtown",
+        "78702": "East Austin",
+        "78703": "Tarrytown / Clarksville",
+        "78704": "South Austin / Zilker / Travis Heights",
+        "78705": "UT / West Campus",
+        "78722": "Cherrywood / Delwood",
+        "78730": "Northwest Hills / Steiner Ranch area",
+        "78731": "Northwest Hills",
+        "78733": "Bee Cave Rd / Rob Roy",
+        "78735": "Barton Creek / Lost Creek",
+        "78745": "South Austin",
+        "78746": "West Lake Hills",
+        "78749": "Southwest Austin",
+        "78751": "Hyde Park / North Loop",
+        "78756": "Brentwood / Rosedale",
+        "78757": "Allandale / Crestview",
+    }
+
+    @classmethod
+    def normalize_zip(cls, value: str) -> str:
+        digits = "".join(ch for ch in (value or "") if ch.isdigit())
+        return digits[:5]
+
+    @classmethod
+    def delivery_zip_ok(cls, value: str) -> bool:
+        return cls.normalize_zip(value) in cls.DELIVERY_ZIPS
 
     STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
     STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "").strip()

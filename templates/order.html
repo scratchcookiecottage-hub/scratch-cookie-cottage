@@ -18,6 +18,7 @@
     data-price-individual="{{ price_individual }}"
     data-price-six-pack="{{ price_six_pack }}"
     data-delivery-fee="{{ delivery_fee }}"
+    data-allowed-zips='{{ delivery_zips.keys() | list | tojson }}'
     data-pickup-slots='{{ pickup_slots_json | tojson }}'
     data-selected-pickup="{{ form.get('pickup_date', '') if form else '' }}"
   >
@@ -133,7 +134,7 @@
       </div>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" data-delivery-geo="{{ url_for('static', filename='data/delivery-zips.geojson') }}">
       <h3>Pickup or delivery</h3>
       <div class="radio-row">
         <label>
@@ -150,9 +151,26 @@
       </div>
       <div id="delivery-fields">
         <div class="field">
-          <label for="address">Delivery address</label>
-          <textarea id="address" name="address" placeholder="Street, city, zip">{{ form.get('address', '') if form else '' }}</textarea>
+          <label for="delivery_zip">Delivery ZIP code</label>
+          <input
+            type="text"
+            id="delivery_zip"
+            name="delivery_zip"
+            inputmode="numeric"
+            maxlength="10"
+            placeholder="78746"
+            autocomplete="postal-code"
+            value="{{ form.get('delivery_zip', '') if form else '' }}"
+          >
+          <p id="zip-feedback" class="pack-hint" style="margin-top:8px;"></p>
         </div>
+        <div class="field">
+          <label for="address">Street address</label>
+          <textarea id="address" name="address" placeholder="Street, apt, gate code">{{ form.get('address', '') if form else '' }}</textarea>
+        </div>
+        <h4 class="script" style="font-size:1.2rem; text-align:left; margin:18px 0 10px;">Delivery area</h4>
+        {% set map_id = "delivery-map-order" %}
+        {% include "_delivery_area.html" %}
       </div>
       <div class="field">
         <label for="notes">Notes (optional)</label>
@@ -189,6 +207,11 @@
     </div>
   </form>
 {% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{% endblock %}
 {% block scripts %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="{{ url_for('static', filename='js/delivery-map.js') }}"></script>
   <script src="{{ url_for('static', filename='js/order.js') }}"></script>
 {% endblock %}

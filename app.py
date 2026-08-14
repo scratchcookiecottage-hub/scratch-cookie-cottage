@@ -73,6 +73,7 @@ def inject_globals():
         "catalog": Config.cookie_catalog(),
         "price_individual": Config.PRICE_INDIVIDUAL_CENTS,
         "price_six_pack": Config.PRICE_SIX_PACK_CENTS,
+        "delivery_zips": Config.DELIVERY_ZIPS,
     }
 
 
@@ -255,6 +256,7 @@ def _order_page_context(form=None):
         "pickup_slots_json": slots,
         "same_week": sw,
         "form": form,
+        "delivery_zips": Config.DELIVERY_ZIPS,
     }
 
 
@@ -270,6 +272,7 @@ def order():
     fulfillment = (request.form.get("fulfillment") or "pickup").strip()
     pickup_date_raw = (request.form.get("pickup_date") or "").strip()
     address = (request.form.get("address") or "").strip()
+    delivery_zip = Config.normalize_zip(request.form.get("delivery_zip") or "")
     notes = (request.form.get("notes") or "").strip()
 
     singles = parse_qty_form("single")
@@ -286,6 +289,16 @@ def order():
         errors.append("Choose pickup or delivery.")
     if fulfillment == "delivery" and not address:
         errors.append("Delivery address is required for delivery orders.")
+    if fulfillment == "delivery" and not delivery_zip:
+        errors.append("Enter a 5-digit delivery ZIP code.")
+    elif fulfillment == "delivery" and not Config.delivery_zip_ok(delivery_zip):
+        errors.append(
+            "Sorry — we only deliver to ZIP codes within about 20 minutes of 78746. "
+            "Please choose pickup or see the map for the delivery area."
+        )
+    if fulfillment == "delivery" and delivery_zip and address:
+        if delivery_zip not in address:
+            address = f"{address.rstrip()}\nAustin, TX {delivery_zip}"
     if not Config.stripe_enabled():
         errors.append("Card payment is required. Online checkout is temporarily unavailable.")
 

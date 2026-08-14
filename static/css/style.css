@@ -577,6 +577,29 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
 #delivery-fields { display: none; }
 #delivery-fields.show { display: block; }
 
+.delivery-map {
+  height: 320px;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--cream-dark);
+  margin-top: 8px;
+}
+
+.zip-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 6px 16px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  text-align: left;
+  font-size: 0.92rem;
+  color: var(--brown-soft);
+}
+
+.zip-list strong { color: var(--brown); }
+
 /* Stripe embed */
 #checkout { min-height: 420px; margin-top: 16px; }
 
