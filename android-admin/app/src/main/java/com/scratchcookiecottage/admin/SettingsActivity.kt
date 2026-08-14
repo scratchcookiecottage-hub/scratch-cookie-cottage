@@ -19,6 +19,7 @@ class SettingsActivity : AppCompatActivity() {
 
         val existing = Prefs.baseUrl(this)
         binding.urlInput.setText(existing.ifEmpty { Prefs.DEFAULT_URL })
+        binding.pushKeyInput.setText(Prefs.pushSecret(this))
 
         binding.saveButton.setOnClickListener {
             val raw = binding.urlInput.text?.toString().orEmpty().trim()
@@ -27,6 +28,8 @@ class SettingsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             Prefs.setBaseUrl(this, raw)
+            Prefs.setPushSecret(this, binding.pushKeyInput.text?.toString().orEmpty())
+            PushRegistrar.register(this)
             Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
             finish()
         }

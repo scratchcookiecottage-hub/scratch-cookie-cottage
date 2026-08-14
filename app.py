@@ -19,14 +19,17 @@ from db import (
     aggregate_cookie_counts,
     aggregate_product_summary,
     create_order,
+    get_order_by_id,
     get_order_by_number,
     get_order_by_stripe_session,
     init_db,
     list_batch_weeks,
     list_orders,
+    save_push_token,
     set_order_status,
     update_order_payment,
 )
+from notify import notify_new_order
 from order_window import (
     batch_pickup_dates,
     batch_week_from_pickup_date,
@@ -435,16 +438,66 @@ def order_return():
         return redirect(url_for("index"))
 
     if checkout_session.status == "complete" and checkout_session.payment_status == "paid":
-        update_order_payment(
-            order["id"],
-            payment_status="paid",
-            stripe_session_id=session_id,
-            status="confirmed",
-        )
+        _mark_order_paid(order, session_id)
         return redirect(url_for("order_success", order_number=order["order_number"]))
 
     flash("Payment was not completed. You can try again anytime.", "error")
     return redirect(url_for("order"))
+
+
+def _mark_order_paid(order: dict, session_id: str | None = None) -> bool:
+    """Mark paid once, then email/push the admin. Returns True if newly paid."""
+    if not order or order.get("payment_status") == "paid":
+        return False
+    update_order_payment(
+        order["id"],
+        payment_status="paid",
+        stripe_session_id=session_id,
+        status="confirmed",
+    )
+    notify_new_order(get_order_by_id(order["id"]) or order)
+    return True
+
+
+@app.route("/stripe/webhook", methods=["POST"])
+def stripe_webhook():
+    if not Config.STRIPE_WEBHOOK_SECRET:
+        return "webhook not configured", 400
+    payload = request.get_data()
+    sig = request.headers.get("Stripe-Signature", "")
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig, Config.STRIPE_WEBHOOK_SECRET
+        )
+    except Exception:
+        return "invalid signature", 400
+
+    if event["type"] == "checkout.session.completed":
+        session_obj = event["data"]["object"]
+        session_id = session_obj.get("id")
+        order = get_order_by_stripe_session(session_id) if session_id else None
+        if not order:
+            order_number = (session_obj.get("metadata") or {}).get("order_number")
+            order = get_order_by_number(order_number) if order_number else None
+        if (
+            order
+            and session_obj.get("payment_status") == "paid"
+        ):
+            _mark_order_paid(order, session_id)
+    return "", 200
+
+
+@app.route("/api/push-token", methods=["POST"])
+def api_push_token():
+    data = request.get_json(silent=True) or {}
+    secret = (data.get("secret") or request.headers.get("X-Push-Secret") or "").strip()
+    token = (data.get("token") or "").strip()
+    if not Config.PUSH_REGISTER_SECRET or secret != Config.PUSH_REGISTER_SECRET:
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    if not token:
+        return jsonify({"ok": False, "error": "missing token"}), 400
+    save_push_token(token)
+    return jsonify({"ok": True})
 
 
 @app.route("/order/success/<order_number>")

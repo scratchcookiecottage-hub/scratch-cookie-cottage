@@ -63,6 +63,16 @@ class Config:
     STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
     PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:5000").rstrip("/")
 
+    ADMIN_NOTIFY_EMAIL = os.getenv("ADMIN_NOTIFY_EMAIL", "").strip()
+    SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com").strip()
+    SMTP_PORT = _int("SMTP_PORT", 587)
+    SMTP_USER = os.getenv("SMTP_USER", "").strip()
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").strip()
+    SMTP_FROM = os.getenv("SMTP_FROM", "").strip()
+
+    PUSH_REGISTER_SECRET = os.getenv("PUSH_REGISTER_SECRET", "").strip()
+    FIREBASE_CREDENTIALS = os.getenv("FIREBASE_CREDENTIALS", "").strip()
+
     # Merch (Printify Pop-Up Store) — available 24/7 via third party
     PRINTIFY_SHOP_URL = os.getenv(
         "PRINTIFY_SHOP_URL",

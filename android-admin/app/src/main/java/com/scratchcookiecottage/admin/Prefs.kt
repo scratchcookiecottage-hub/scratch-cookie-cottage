@@ -26,6 +26,20 @@ object Prefs {
             .apply()
     }
 
+    fun pushSecret(context: Context): String {
+        return context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .getString("push_secret", "")
+            .orEmpty()
+            .trim()
+    }
+
+    fun setPushSecret(context: Context, secret: String) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .edit()
+            .putString("push_secret", secret.trim())
+            .apply()
+    }
+
     fun adminUrl(context: Context): String {
         val base = baseUrl(context)
         if (base.isEmpty()) return ""

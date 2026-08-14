@@ -68,6 +68,14 @@ def init_db() -> None:
             conn.execute("ALTER TABLE orders ADD COLUMN pickup_day TEXT")
         if "pickup_date" not in cols:
             conn.execute("ALTER TABLE orders ADD COLUMN pickup_date TEXT")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS push_tokens (
+                token TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
 
 
 def create_order(data: dict[str, Any]) -> int:
@@ -187,6 +195,33 @@ def list_batch_weeks() -> list[str]:
             """
         ).fetchall()
     return [r["batch_week"] for r in rows]
+
+
+def save_push_token(token: str) -> None:
+    token = (token or "").strip()
+    if not token:
+        return
+    from datetime import datetime, timezone
+
+    with get_db() as conn:
+        conn.execute(
+            """
+            INSERT INTO push_tokens (token, created_at) VALUES (?, ?)
+            ON CONFLICT(token) DO UPDATE SET created_at = excluded.created_at
+            """,
+            (token, datetime.now(timezone.utc).isoformat()),
+        )
+
+
+def list_push_tokens() -> list[str]:
+    with get_db() as conn:
+        rows = conn.execute("SELECT token FROM push_tokens").fetchall()
+    return [r["token"] for r in rows]
+
+
+def delete_push_token(token: str) -> None:
+    with get_db() as conn:
+        conn.execute("DELETE FROM push_tokens WHERE token = ?", (token,))
 
 
 def set_order_status(order_id: int, status: str) -> None:

@@ -4,7 +4,8 @@
     <string name="settings_title">Site address</string>
     <string name="settings_blurb">This app opens the Scratch Cookie Cottage admin portal. Enter the website address — no /admin at the end.</string>
     <string name="site_url_hint">Website address</string>
-    <string name="settings_examples">Live site:\nhttps://scratchcookiecottage.pythonanywhere.com\n\nAfter the Squarespace domain is connected:\nhttps://www.scratchcookiecottage.com</string>
+    <string name="push_key_hint">Notification key</string>
+    <string name="settings_examples">Live site:\nhttps://scratchcookiecottage.pythonanywhere.com\n\nNotification key is the PUSH_REGISTER_SECRET from the website .env. Same value on the phone and on PythonAnywhere.</string>
     <string name="save">Save</string>
     <string name="saved">Saved</string>
     <string name="invalid_url">Enter a full address starting with http:// or https://</string>
