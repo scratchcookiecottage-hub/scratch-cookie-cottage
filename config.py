@@ -77,7 +77,7 @@ class Config:
                 "name": "Salted Caramel Chocolate Pecan",
                 "description": "Gooey caramel, chocolate, and toasted pecans with a kiss of sea salt.",
                 "img_default": "images/salted_caramel.jpg",
-                "img_hover": "",
+                "img_hover": "images/salted_caramel_alt.jpg",
             },
             "peanut_butter": {
                 "name": "White Miso Peanut Butter",
