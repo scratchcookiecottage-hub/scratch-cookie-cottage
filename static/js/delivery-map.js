@@ -15,12 +15,12 @@
       maps.forEach(function (el) {
         const map = L.map(el, {
           scrollWheelZoom: false,
-          attributionControl: true,
+          attributionControl: false,
+          zoomControl: true,
         });
         el._leaflet_map = map;
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 18,
-          attribution: "&copy; OpenStreetMap",
         }).addTo(map);
 
         const layer = L.geoJSON(geo, {
@@ -42,16 +42,17 @@
 
         const bounds = layer.getBounds();
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [18, 18] });
+          map.fitBounds(bounds, { padding: [48, 48], maxZoom: 10 });
+          map.setZoom(map.getZoom() - 1);
         } else {
-          map.setView([30.28, -97.78], 11);
+          map.setView([30.28, -97.78], 10);
         }
       });
     })
     .catch(function () {
       maps.forEach(function (el) {
         el.innerHTML =
-          "<p class=\"section-note\">Delivery area map could not load. See the ZIP list below.</p>";
+          "<p class=\"section-note\">Delivery area map could not load.</p>";
       });
     });
 })();

@@ -50,10 +50,6 @@
 
   <div class="panel" data-delivery-geo="{{ url_for('static', filename='data/delivery-zips.geojson') }}">
     <h2>Delivery area</h2>
-    <p>
-      Local delivery is limited to ZIP codes about 20 minutes from
-      <strong>78746</strong> (West Lake Hills). Pickup is always available.
-    </p>
     {% set map_id = "delivery-map-home" %}
     {% include "_delivery_area.html" %}
   </div>
