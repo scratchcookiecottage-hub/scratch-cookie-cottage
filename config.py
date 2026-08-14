@@ -71,7 +71,7 @@ class Config:
                 "name": "Macadamia White Chocolate",
                 "description": "Buttery macadamia nuts and smooth white chocolate in every bite.",
                 "img_default": "images/macadamia.jpg",
-                "img_hover": "",
+                "img_hover": "images/macadamia_alt.jpg",
             },
             "salted_caramel": {
                 "name": "Salted Caramel Chocolate Pecan",

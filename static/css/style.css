@@ -134,7 +134,6 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: opacity 0.35s ease;
 }
 
 .cookie-photo .img-default { position: relative; z-index: 1; }
@@ -145,8 +144,28 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
   opacity: 0;
 }
 
-.cookie-card:hover .img-hover { opacity: 1; }
-.cookie-card:hover .img-default { opacity: 0; }
+.cookie-photo.has-alt .img-default {
+  animation: cookieFadeA 8s ease-in-out infinite;
+}
+.cookie-photo.has-alt .img-hover {
+  animation: cookieFadeB 8s ease-in-out infinite;
+}
+
+@keyframes cookieFadeA {
+  0%, 38% { opacity: 1; }
+  50%, 88% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes cookieFadeB {
+  0%, 38% { opacity: 0; }
+  50%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cookie-photo.has-alt .img-default,
+  .cookie-photo.has-alt .img-hover { animation: none; }
+}
 
 .cookie-body { padding: 22px 20px 26px; }
 .cookie-body p { margin: 0; color: var(--muted); font-size: 0.95rem; }

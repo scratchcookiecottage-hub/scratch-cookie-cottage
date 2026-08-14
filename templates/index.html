@@ -14,7 +14,7 @@
   <div class="cookie-grid">
     {% for cookie_id, cookie in catalog.items() %}
     <div class="cookie-card">
-      <div class="cookie-photo">
+      <div class="cookie-photo{% if cookie.img_default and cookie.img_hover %} has-alt{% endif %}">
         {% if cookie.img_default %}
           <img class="img-default" src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}" alt="{{ cookie.name }}">
           {% if cookie.img_hover %}
