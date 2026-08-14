@@ -1,8 +1,5 @@
 {% extends "base.html" %}
 {% block title %}{{ business_name }} — Our Cookies{% endblock %}
-{% block head %}
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-{% endblock %}
 {% block content %}
   <h1>Our Cookies</h1>
   <p class="lead">
@@ -48,12 +45,6 @@
     </p>
   </div>
 
-  <div class="panel" data-delivery-geo="{{ url_for('static', filename='data/delivery-zips.geojson') }}">
-    <h2>Delivery area</h2>
-    {% set map_id = "delivery-map-home" %}
-    {% include "_delivery_area.html" %}
-  </div>
-
   <div class="panel">
     <h2>Pricing</h2>
     <p><strong>Individual cookies</strong> — {{ price_individual | money }} each</p>
@@ -65,8 +56,4 @@
     <a class="btn" href="{{ url_for('order') }}">Order Cookies</a>
     <a class="btn secondary" href="{{ url_for('merch') }}">Shop Merch</a>
   </div>
-{% endblock %}
-{% block scripts %}
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="{{ url_for('static', filename='js/delivery-map.js') }}"></script>
 {% endblock %}
