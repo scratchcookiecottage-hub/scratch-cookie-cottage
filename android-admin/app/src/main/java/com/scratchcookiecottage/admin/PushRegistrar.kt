@@ -45,8 +45,11 @@ object PushRegistrar {
                     .put("token", token)
                     .put("secret", secret)
                     .toString()
-                OutputStreamWriter(conn.outputStream).use { it.write(body) }
-                conn.inputStream.use { it.readBytes() }
+                OutputStreamWriter(conn.outputStream, Charsets.UTF_8).use { it.write(body) }
+                val code = conn.responseCode
+                val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                stream?.use { it.readBytes() }
+                Log.i("SCCPush", "Register token HTTP $code")
                 conn.disconnect()
             } catch (ex: Exception) {
                 Log.w("SCCPush", "Could not register token", ex)

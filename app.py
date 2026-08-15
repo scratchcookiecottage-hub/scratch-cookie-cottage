@@ -25,11 +25,12 @@ from db import (
     init_db,
     list_batch_weeks,
     list_orders,
+    list_push_tokens,
     save_push_token,
     set_order_status,
     update_order_payment,
 )
-from notify import notify_new_order
+from notify import notify_new_order, send_admin_push
 from order_window import (
     batch_pickup_dates,
     batch_week_from_pickup_date,
@@ -587,7 +588,28 @@ def admin_dashboard():
         pickup_dates=pickup_dates,
         pickup_friday_orders=fri,
         pickup_saturday_orders=sat,
+        push_phone_count=len(list_push_tokens()),
+        firebase_ready=bool(Config.FIREBASE_CREDENTIALS),
     )
+
+
+@app.route("/admin/notify-test", methods=["POST"])
+@admin_required
+def admin_notify_test():
+    result = send_admin_push(
+        {
+            "order_number": "TEST",
+            "customer_name": "Test notification",
+            "customer_phone": "",
+            "customer_email": "",
+            "fulfillment": "pickup",
+            "pickup_date": "",
+            "items": [],
+            "total_cents": 0,
+        }
+    )
+    flash(result, "error" if "Sent" not in result else "ok")
+    return redirect(url_for("admin_dashboard", batch=request.form.get("batch")))
 
 
 @app.route("/admin/print/orders")

@@ -63,29 +63,33 @@ def send_admin_email(order: dict) -> None:
         log.exception("Admin email failed")
 
 
-def send_admin_push(order: dict) -> None:
+def send_admin_push(order: dict) -> str:
     cred_path = Config.FIREBASE_CREDENTIALS
     if not cred_path:
-        return
+        return "Firebase is not configured (missing FIREBASE_CREDENTIALS)."
+    import os
+
+    if not os.path.isfile(cred_path):
+        return f"Firebase key file not found at {cred_path}."
     try:
         import firebase_admin
         from firebase_admin import credentials, messaging
     except ImportError:
         log.warning("firebase-admin is not installed")
-        return
+        return "firebase-admin is not installed. Run pip install -r requirements.txt."
 
     from db import delete_push_token, list_push_tokens
 
     tokens = list_push_tokens()
     if not tokens:
-        return
+        return "No phone has registered yet. Open SCC Admin and tap Save on Site address."
 
     try:
         if not firebase_admin._apps:
             firebase_admin.initialize_app(credentials.Certificate(cred_path))
-    except Exception:
+    except Exception as exc:
         log.exception("Firebase init failed")
-        return
+        return f"Firebase init failed: {exc}"
 
     title, body = order_summary(order)
     short = body.split("\n\n", 1)[0]
@@ -102,15 +106,20 @@ def send_admin_push(order: dict) -> None:
     )
     try:
         result = messaging.send_each_for_multicast(message)
-    except Exception:
+    except Exception as exc:
         log.exception("FCM send failed")
-        return
+        return f"FCM send failed: {exc}"
+    sent = 0
     for idx, resp in enumerate(result.responses):
         if resp.success:
+            sent += 1
             continue
         err = str(getattr(resp, "exception", "") or "")
         if "not-found" in err.lower() or "registration-token" in err.lower():
             delete_push_token(tokens[idx])
+    if sent:
+        return f"Sent to {sent} phone(s)."
+    return "Firebase responded, but no phone accepted the message."
 
 
 def notify_new_order(order: dict) -> None:

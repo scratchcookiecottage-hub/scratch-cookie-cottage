@@ -26,6 +26,18 @@
 
   <p class="lead">{{ batch_label }} · {{ orders|length }} order(s)</p>
 
+  <div class="panel" style="text-align:left; margin-bottom:20px;">
+    <p style="margin:0 0 10px;">
+      Phone notifications:
+      {% if firebase_ready %}Firebase key is set.{% else %}Firebase key is <strong>not</strong> set in .env.{% endif %}
+      {{ push_phone_count }} phone(s) registered.
+    </p>
+    <form method="post" action="{{ url_for('admin_notify_test') }}">
+      <input type="hidden" name="batch" value="{{ selected_batch }}">
+      <button type="submit" class="btn secondary">Send test notification</button>
+    </form>
+  </div>
+
   <div class="counts-box">
     <h2 style="text-align:left; font-size:1.5rem; margin-bottom:12px;">Cookie counts (individual cookies to bake)</h2>
     <ul>
