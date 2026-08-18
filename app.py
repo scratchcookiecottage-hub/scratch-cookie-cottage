@@ -248,6 +248,24 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/api/seasonal")
+def api_seasonal():
+    listing = get_seasonal()
+    return jsonify(
+        {
+            "active": bool(listing.get("active")),
+            "name": listing.get("name") or "",
+            "description": listing.get("description") or "",
+            "ingredients": listing.get("ingredients") or "",
+            "allergens": listing.get("allergens") or "",
+            "images": [
+                url_for("static", filename=img["path"], _external=True)
+                for img in listing.get("images") or []
+            ],
+        }
+    )
+
+
 @app.route("/merch")
 def merch():
     """Merch is fulfilled by Printify 24/7 — we link out (or show API products later)."""
