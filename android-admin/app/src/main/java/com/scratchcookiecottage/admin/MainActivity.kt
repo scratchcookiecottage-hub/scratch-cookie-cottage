@@ -2,15 +2,19 @@ package com.scratchcookiecottage.admin
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.DownloadManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.CookieManager
+import android.webkit.URLUtil
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -46,6 +50,29 @@ class MainActivity : AppCompatActivity() {
         web.settings.displayZoomControls = false
         web.settings.loadWithOverviewMode = true
         web.settings.useWideViewPort = true
+
+        web.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+            try {
+                val request = DownloadManager.Request(Uri.parse(url))
+                request.setMimeType(mimeType)
+                request.addRequestHeader("User-Agent", userAgent)
+                val cookie = CookieManager.getInstance().getCookie(url)
+                if (!cookie.isNullOrBlank()) {
+                    request.addRequestHeader("Cookie", cookie)
+                }
+                val name = URLUtil.guessFileName(url, contentDisposition, mimeType)
+                request.setTitle(name)
+                request.setNotificationVisibility(
+                    DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED,
+                )
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
+                val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                dm.enqueue(request)
+                Toast.makeText(this, "Downloading $name", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {
+                Toast.makeText(this, "Could not download file", Toast.LENGTH_LONG).show()
+            }
+        }
 
         web.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {

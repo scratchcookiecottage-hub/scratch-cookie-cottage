@@ -1,6 +1,7 @@
 import secrets
 from datetime import date, datetime
 from functools import wraps
+from io import BytesIO
 
 import stripe
 from flask import (
@@ -10,6 +11,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     session,
     url_for,
 )
@@ -30,6 +32,7 @@ from db import (
     set_order_status,
     update_order_payment,
 )
+from labels.generate_labels import build_labels_pdf
 from notify import notify_new_order, send_admin_push
 from order_window import (
     batch_pickup_dates,
@@ -651,6 +654,78 @@ def admin_print_counts():
         selected_batch=selected,
         batch_label=batch_week_label(selected),
         printed_at=now_local().strftime("%Y-%m-%d %H:%M"),
+    )
+
+
+def _label_rows_for_batch(selected: str) -> tuple[list[dict], int]:
+    orders = list_orders(batch_week=selected)
+    counts = aggregate_cookie_counts(orders)
+    catalog = Config.cookie_catalog()
+    rows = []
+    total = 0
+    for cookie_id, info in catalog.items():
+        raw = request.values.get(f"qty_{cookie_id}")
+        if raw is None or str(raw).strip() == "":
+            qty = int(counts.get(cookie_id, 0) or 0)
+        else:
+            try:
+                qty = int(raw)
+            except ValueError:
+                qty = 0
+        qty = max(0, min(qty, 500))
+        ordered = int(counts.get(cookie_id, 0) or 0)
+        rows.append(
+            {
+                "id": cookie_id,
+                "name": info["name"],
+                "ordered": ordered,
+                "qty": qty,
+            }
+        )
+        total += qty
+    return rows, total
+
+
+@app.route("/admin/print/labels")
+@admin_required
+def admin_print_labels():
+    selected = request.args.get("batch") or current_batch_week()
+    rows, total = _label_rows_for_batch(selected)
+    sheets = (total + 9) // 10
+    return render_template(
+        "admin/print_labels.html",
+        rows=rows,
+        total_labels=total,
+        sheets=sheets,
+        selected_batch=selected,
+        batch_label=batch_week_label(selected),
+        order_count=len(list_orders(batch_week=selected)),
+    )
+
+
+@app.route("/admin/print/labels.pdf")
+@admin_required
+def admin_print_labels_pdf():
+    selected = request.args.get("batch") or current_batch_week()
+    rows, total = _label_rows_for_batch(selected)
+    if total <= 0:
+        flash("Enter at least one label to print.", "error")
+        return redirect(url_for("admin_print_labels", batch=selected))
+    qty_map = {row["id"]: row["qty"] for row in rows}
+    try:
+        pdf = build_labels_pdf(
+            qty_map,
+            title=f"Scratch Cookie Cottage labels — {batch_week_label(selected)}",
+        )
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("admin_print_labels", batch=selected))
+    filename = f"SCC-labels-{selected}-{total}.pdf"
+    return send_file(
+        BytesIO(pdf),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=filename,
     )
 
 

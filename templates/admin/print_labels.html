@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Print labels — {{ batch_label }}{% endblock %}
+{% block content %}
+  <div class="btn-row" style="justify-content:flex-start; margin-bottom:20px;">
+    <a class="btn secondary" href="{{ url_for('admin_dashboard', batch=selected_batch) }}">Back</a>
+  </div>
+
+  <h1>Print cottage-food labels</h1>
+  <p class="lead">{{ batch_label }} · {{ order_count }} paid order(s)</p>
+  <p>Counts start from this week’s bake sheet. Change a number if you need extras or fewer, then download the Avery PDF (10 labels per Letter sheet).</p>
+
+  <form method="get" action="{{ url_for('admin_print_labels_pdf') }}" class="panel" style="text-align:left; max-width:560px;">
+    <input type="hidden" name="batch" value="{{ selected_batch }}">
+
+    <table class="admin-table" style="margin:0;">
+      <thead>
+        <tr>
+          <th>Flavor</th>
+          <th>Ordered</th>
+          <th>Labels to print</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.name }}</td>
+          <td>{{ row.ordered }}</td>
+          <td>
+            <input
+              class="label-qty"
+              type="number"
+              name="qty_{{ row.id }}"
+              value="{{ row.qty }}"
+              min="0"
+              max="500"
+              step="1"
+              inputmode="numeric"
+              style="width:5.5rem; padding:8px 10px; font-size:1.05rem;"
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p style="margin:16px 0 8px;">
+      <strong>Total labels:</strong> <span id="label-total">{{ total_labels }}</span>
+      &nbsp;·&nbsp;
+      <strong>Sheets:</strong> <span id="label-sheets">{{ sheets }}</span>
+      <span style="color:var(--muted);"> (Avery 2″ × 4″, 10-up)</span>
+    </p>
+
+    <div class="btn-row" style="justify-content:flex-start; margin-top:16px;">
+      <button class="btn" type="submit">Download Avery PDF</button>
+      <button class="btn secondary" type="button" id="reset-ordered">Reset to ordered</button>
+    </div>
+  </form>
+
+  <p style="margin-top:20px; color:var(--muted); max-width:560px;">
+    Print the PDF at <strong>Actual size / 100%</strong>. Do not use Fit or Shrink to printable area.
+    The last sheet may be only partly filled.
+  </p>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var inputs = document.querySelectorAll(".label-qty");
+  var totalEl = document.getElementById("label-total");
+  var sheetsEl = document.getElementById("label-sheets");
+  var ordered = {};
+  {% for row in rows %}
+  ordered[{{ row.id|tojson }}] = {{ row.ordered|int }};
+  {% endfor %}
+
+  function refresh() {
+    var total = 0;
+    inputs.forEach(function (el) {
+      var n = parseInt(el.value, 10);
+      if (isNaN(n) || n < 0) n = 0;
+      if (n > 500) n = 500;
+      total += n;
+    });
+    totalEl.textContent = total;
+    sheetsEl.textContent = total === 0 ? 0 : Math.ceil(total / 10);
+  }
+
+  inputs.forEach(function (el) { el.addEventListener("input", refresh); });
+  var reset = document.getElementById("reset-ordered");
+  if (reset) {
+    reset.addEventListener("click", function () {
+      inputs.forEach(function (el) {
+        var id = el.name.replace("qty_", "");
+        el.value = ordered[id] || 0;
+      });
+      refresh();
+    });
+  }
+  refresh();
+})();
+</script>
+{% endblock %}

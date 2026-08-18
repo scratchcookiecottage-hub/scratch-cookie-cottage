@@ -1,0 +1,7 @@
+# Generated print files — rebuilt by generate_labels.py / the admin app
+*.pdf
+preview-*.png
+proof-*
+print-*
+APLT10.doc
+__pycache__/
