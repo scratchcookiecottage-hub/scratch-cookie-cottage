@@ -15,6 +15,7 @@ import android.view.MenuItem
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.URLUtil
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -28,8 +29,28 @@ import com.scratchcookiecottage.admin.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private val notifyPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    private val fileChooser =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val callback = filePathCallback
+            filePathCallback = null
+            if (callback == null) return@registerForActivityResult
+            if (result.resultCode != RESULT_OK) {
+                callback.onReceiveValue(null)
+                return@registerForActivityResult
+            }
+            val data = result.data
+            val uris = linkedSetOf<Uri>()
+            data?.clipData?.let { clip ->
+                for (i in 0 until clip.itemCount) {
+                    clip.getItemAt(i).uri?.let(uris::add)
+                }
+            }
+            data?.data?.let(uris::add)
+            callback.onReceiveValue(if (uris.isEmpty()) null else uris.toTypedArray())
+        }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +71,8 @@ class MainActivity : AppCompatActivity() {
         web.settings.displayZoomControls = false
         web.settings.loadWithOverviewMode = true
         web.settings.useWideViewPort = true
+        web.settings.allowFileAccess = true
+        web.settings.allowContentAccess = true
 
         web.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
             try {
@@ -78,6 +101,35 @@ class MainActivity : AppCompatActivity() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 binding.progress.visibility = if (newProgress in 1..99) View.VISIBLE else View.GONE
                 binding.progress.progress = newProgress
+            }
+
+            override fun onShowFileChooser(
+                webView: WebView?,
+                callback: ValueCallback<Array<Uri>>?,
+                fileChooserParams: FileChooserParams?,
+            ): Boolean {
+                filePathCallback?.onReceiveValue(null)
+                filePathCallback = callback
+                val intent = fileChooserParams?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/*"
+                }
+                if (fileChooserParams?.mode == FileChooserParams.MODE_OPEN_MULTIPLE) {
+                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                }
+                return try {
+                    fileChooser.launch(intent)
+                    true
+                } catch (_: Exception) {
+                    filePathCallback = null
+                    callback?.onReceiveValue(null)
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Could not open the photo picker",
+                        Toast.LENGTH_LONG,
+                    ).show()
+                    false
+                }
             }
         }
 
