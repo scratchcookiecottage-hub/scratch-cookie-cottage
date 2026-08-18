@@ -32,7 +32,6 @@ from db import (
     set_order_status,
     update_order_payment,
 )
-from labels.generate_labels import build_labels_pdf
 from notify import notify_new_order, send_admin_push
 from order_window import (
     batch_pickup_dates,
@@ -713,10 +712,19 @@ def admin_print_labels_pdf():
         return redirect(url_for("admin_print_labels", batch=selected))
     qty_map = {row["id"]: row["qty"] for row in rows}
     try:
+        from labels.generate_labels import build_labels_pdf
+
         pdf = build_labels_pdf(
             qty_map,
             title=f"Scratch Cookie Cottage labels — {batch_week_label(selected)}",
         )
+    except ImportError:
+        flash(
+            "Label printing needs the reportlab package. "
+            "In a PythonAnywhere Bash console run: pip install reportlab",
+            "error",
+        )
+        return redirect(url_for("admin_print_labels", batch=selected))
     except ValueError as exc:
         flash(str(exc), "error")
         return redirect(url_for("admin_print_labels", batch=selected))

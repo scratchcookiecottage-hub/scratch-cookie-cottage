@@ -113,12 +113,12 @@ def new_canvas(dest, title: str) -> canvas.Canvas:
     return c
 
 
-def flavor_for_cookie_id(cookie_id: str) -> dict | None:
+def flavor_for_cookie_id(cookie_id: str):
     flavor_id = COOKIE_ID_TO_FLAVOR_ID.get(cookie_id, cookie_id)
     return FLAVOR_BY_ID.get(flavor_id)
 
 
-def build_labels_pdf(qty_by_cookie_id: dict, title: str | None = None) -> bytes:
+def build_labels_pdf(qty_by_cookie_id, title=None):
     """Build Avery 5163 sheets for the given cookie_id -> count map."""
     queue: list[dict] = []
     for cookie_id, flavor_id in COOKIE_ID_TO_FLAVOR_ID.items():
