@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Seasonal cookie — Admin{% endblock %}
+{% block content %}
+  <div class="btn-row" style="justify-content:flex-start; margin-bottom:20px;">
+    <a class="btn secondary" href="{{ url_for('admin_dashboard') }}">Back</a>
+    <a class="btn secondary" href="{{ url_for('admin_print_labels') }}">Print labels</a>
+  </div>
+
+  <h1>Seasonal rotation</h1>
+  <p class="lead">This listing sits at the top of the cookie menu. Edit the name, photos, and label details anytime.</p>
+
+  <form method="post" enctype="multipart/form-data" class="panel" style="text-align:left; max-width:720px;">
+    <input type="hidden" name="action" value="save">
+
+    <div class="field">
+      <label for="name">Cookie name</label>
+      <input type="text" id="name" name="name" required value="{{ listing.name }}">
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="3">{{ listing.description }}</textarea>
+    </div>
+
+    <div class="field">
+      <label>
+        <input type="checkbox" name="active" value="1" {% if listing.active %}checked{% endif %}>
+        Show on the website and order form
+      </label>
+    </div>
+
+    <h2 style="font-size:1.2rem; margin:24px 0 8px;">Photos</h2>
+    <p class="section-note">These rotate on the homepage. Upload 1–8 photos (JPG, PNG, or WebP).</p>
+    <div class="field">
+      <label for="photos">Add photos</label>
+      <input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+    </div>
+
+    <h2 style="font-size:1.2rem; margin:24px 0 8px;">Cottage-food label</h2>
+    <p class="section-note">Used on Avery labels. List ingredients heaviest first. Check every major allergen that is in this cookie.</p>
+
+    <div class="field">
+      <label for="ingredients">Ingredients (by weight)</label>
+      <textarea id="ingredients" name="ingredients" rows="4" placeholder="Unbleached Flour, Butter, Sugar, Eggs, …">{{ listing.ingredients }}</textarea>
+    </div>
+
+    <fieldset class="field" style="border:0; padding:0;">
+      <legend style="font-weight:700; margin-bottom:8px;">Contains (major allergens)</legend>
+      <div class="allergen-grid">
+        {% for name in major_allergens %}
+        <label>
+          <input type="checkbox" name="allergen" value="{{ name }}" {% if name in selected_allergens %}checked{% endif %}>
+          {{ name }}
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <div class="field">
+      <label for="tree_nuts">Which tree nuts? (if any)</label>
+      <input type="text" id="tree_nuts" name="tree_nuts" placeholder="Pecans, Macadamia" value="{{ tree_nuts }}">
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-start; margin-top:20px;">
+      <button class="btn" type="submit">Save seasonal cookie</button>
+    </div>
+  </form>
+
+  {% if listing.images %}
+  <div class="panel" style="text-align:left; max-width:720px; margin-top:16px;">
+    <h2 style="font-size:1.2rem; margin-bottom:12px;">Remove a photo</h2>
+    <div class="seasonal-admin-photos">
+      {% for img in listing.images %}
+      <figure>
+        <img src="{{ url_for('static', filename=img.path) }}" alt="">
+        <form method="post" action="{{ url_for('admin_seasonal') }}">
+          <input type="hidden" name="action" value="delete_photo">
+          <input type="hidden" name="image_id" value="{{ img.id }}">
+          <button type="submit" class="btn secondary" style="margin-top:8px;">Remove</button>
+        </form>
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}

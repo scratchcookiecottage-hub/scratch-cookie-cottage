@@ -1,9 +1,14 @@
 import json
+import os
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from config import Config
+
+SEASONAL_ID = "seasonal"
+SEASONAL_UPLOAD_REL = "images/seasonal"
 
 
 def _connect() -> sqlite3.Connection:
@@ -76,6 +81,44 @@ def init_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS seasonal_listing (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                name TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                ingredients TEXT NOT NULL DEFAULT '',
+                allergens TEXT NOT NULL DEFAULT '',
+                active INTEGER NOT NULL DEFAULT 1,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS seasonal_images (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0
+            )
+            """
+        )
+        existing = conn.execute(
+            "SELECT id FROM seasonal_listing WHERE id = 1"
+        ).fetchone()
+        if not existing:
+            conn.execute(
+                """
+                INSERT INTO seasonal_listing
+                    (id, name, description, ingredients, allergens, active, updated_at)
+                VALUES (1, ?, ?, '', '', 1, ?)
+                """,
+                (
+                    "Seasonal Rotation",
+                    "This week’s guest cookie. The flavor changes — check the name and photos.",
+                    datetime.now(timezone.utc).isoformat(),
+                ),
+            )
 
 
 def create_order(data: dict[str, Any]) -> int:
@@ -227,6 +270,135 @@ def delete_push_token(token: str) -> None:
 def set_order_status(order_id: int, status: str) -> None:
     with get_db() as conn:
         conn.execute("UPDATE orders SET status = ? WHERE id = ?", (status, order_id))
+
+
+def seasonal_upload_dir() -> str:
+    root = os.path.join(os.path.dirname(__file__), "static", "images", "seasonal")
+    os.makedirs(root, exist_ok=True)
+    return root
+
+
+def get_seasonal() -> dict:
+    with get_db() as conn:
+        row = conn.execute("SELECT * FROM seasonal_listing WHERE id = 1").fetchone()
+        images = conn.execute(
+            "SELECT id, filename, sort_order FROM seasonal_images ORDER BY sort_order ASC, id ASC"
+        ).fetchall()
+    if not row:
+        return {
+            "id": 1,
+            "name": "Seasonal Rotation",
+            "description": "",
+            "ingredients": "",
+            "allergens": "",
+            "active": False,
+            "updated_at": "",
+            "images": [],
+        }
+    d = dict(row)
+    d["active"] = bool(d.get("active"))
+    d["images"] = [
+        {
+            "id": img["id"],
+            "filename": img["filename"],
+            "path": f"{SEASONAL_UPLOAD_REL}/{img['filename']}",
+        }
+        for img in images
+    ]
+    return d
+
+
+def save_seasonal(
+    *,
+    name: str,
+    description: str,
+    ingredients: str,
+    allergens: str,
+    active: bool,
+) -> None:
+    name = (name or "").strip() or "Seasonal Rotation"
+    with get_db() as conn:
+        conn.execute(
+            """
+            UPDATE seasonal_listing
+            SET name = ?, description = ?, ingredients = ?, allergens = ?,
+                active = ?, updated_at = ?
+            WHERE id = 1
+            """,
+            (
+                name,
+                (description or "").strip(),
+                (ingredients or "").strip(),
+                (allergens or "").strip(),
+                1 if active else 0,
+                datetime.now(timezone.utc).isoformat(),
+            ),
+        )
+
+
+def add_seasonal_image(filename: str) -> None:
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT COALESCE(MAX(sort_order), -1) AS m FROM seasonal_images"
+        ).fetchone()
+        nxt = int(row["m"]) + 1 if row else 0
+        conn.execute(
+            "INSERT INTO seasonal_images (filename, sort_order) VALUES (?, ?)",
+            (filename, nxt),
+        )
+
+
+def delete_seasonal_image(image_id: int) -> Optional[str]:
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT filename FROM seasonal_images WHERE id = ?", (image_id,)
+        ).fetchone()
+        if not row:
+            return None
+        conn.execute("DELETE FROM seasonal_images WHERE id = ?", (image_id,))
+    return row["filename"]
+
+
+def store_catalog(*, include_inactive: bool = False) -> dict:
+    """Core flavors plus the seasonal listing when it should be shown."""
+    catalog: dict = {}
+    seasonal = get_seasonal()
+    show = include_inactive or seasonal.get("active")
+    if show:
+        paths = [img["path"] for img in seasonal.get("images") or []]
+        catalog[SEASONAL_ID] = {
+            "name": seasonal["name"],
+            "description": seasonal.get("description") or "",
+            "img_default": paths[0] if paths else "",
+            "img_hover": paths[1] if len(paths) > 1 else "",
+            "images": paths,
+            "ingredients": seasonal.get("ingredients") or "",
+            "allergens": seasonal.get("allergens") or "",
+            "seasonal": True,
+            "active": bool(seasonal.get("active")),
+        }
+    catalog.update(Config.cookie_catalog())
+    return catalog
+
+
+def seasonal_label_flavor() -> Optional[dict]:
+    seasonal = get_seasonal()
+    name = (seasonal.get("name") or "").strip()
+    if not name:
+        return None
+    allergens = (seasonal.get("allergens") or "").strip()
+    if allergens and not allergens.lower().startswith("contains"):
+        contains = f"Contains: {allergens}"
+    elif allergens:
+        contains = allergens
+    else:
+        contains = "Contains: See ingredients"
+    return {
+        "id": SEASONAL_ID,
+        "name": name,
+        "contains": contains,
+        "ingredients": (seasonal.get("ingredients") or "").strip(),
+    }
 
 
 def _row_to_order(row: sqlite3.Row) -> dict:

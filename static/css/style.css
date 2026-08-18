@@ -184,6 +184,58 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
   .cookie-photo.has-alt .img-hover { animation: none; }
 }
 
+.cookie-photo.rotator img {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.cookie-photo.rotator img.is-on { opacity: 1; z-index: 2; }
+
+.cookie-card.is-seasonal {
+  outline: 2px solid var(--brown);
+  outline-offset: 0;
+}
+
+.seasonal-badge {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--brown);
+  color: var(--cream);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.seasonal-admin-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 8px;
+}
+.seasonal-admin-photos figure {
+  margin: 0;
+  width: 140px;
+  text-align: center;
+}
+.seasonal-admin-photos img {
+  width: 140px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.allergen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
 .cookie-body { padding: 22px 20px 26px; }
 .cookie-body p { margin: 0; color: var(--muted); font-size: 0.95rem; }
 .price-tag {

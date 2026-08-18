@@ -1,3 +1,4 @@
+import os
 import secrets
 from datetime import date, datetime
 from functools import wraps
@@ -18,18 +19,26 @@ from flask import (
 
 from config import Config
 from db import (
+    SEASONAL_ID,
+    add_seasonal_image,
     aggregate_cookie_counts,
     aggregate_product_summary,
     create_order,
+    delete_seasonal_image,
     get_order_by_id,
     get_order_by_number,
     get_order_by_stripe_session,
+    get_seasonal,
     init_db,
     list_batch_weeks,
     list_orders,
     list_push_tokens,
     save_push_token,
+    save_seasonal,
+    seasonal_label_flavor,
+    seasonal_upload_dir,
     set_order_status,
+    store_catalog,
     update_order_payment,
 )
 from notify import notify_new_order, send_admin_push
@@ -50,6 +59,7 @@ from order_window import (
 app = Flask(__name__)
 app.config.from_object(Config)
 app.secret_key = Config.SECRET_KEY
+app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
 if Config.stripe_enabled():
     stripe.api_key = Config.STRIPE_SECRET_KEY
@@ -76,7 +86,7 @@ def inject_globals():
         "window_message": msg,
         "same_week_open": sw["same_week_open"],
         "business_name": "Scratch Cookie Cottage",
-        "catalog": Config.cookie_catalog(),
+        "catalog": store_catalog(),
         "price_individual": Config.PRICE_INDIVIDUAL_CENTS,
         "price_six_pack": Config.PRICE_SIX_PACK_CENTS,
         "delivery_zips": Config.DELIVERY_ZIPS,
@@ -95,7 +105,7 @@ def admin_required(fn):
 
 def parse_qty_form(prefix: str) -> dict[str, int]:
     """Read qty fields named {prefix}_{cookie_id}."""
-    catalog = Config.cookie_catalog()
+    catalog = store_catalog()
     items = {}
     for cookie_id in catalog:
         raw = request.form.get(f"{prefix}_{cookie_id}", "0") or "0"
@@ -123,7 +133,7 @@ def build_line_items(
 
     Returns (lines, subtotal_cents, errors).
     """
-    catalog = Config.cookie_catalog()
+    catalog = store_catalog()
     errors: list[str] = []
     lines: list[dict] = []
     subtotal = 0
@@ -249,7 +259,7 @@ def merch():
 
 
 def _order_page_context(form=None):
-    catalog = Config.cookie_catalog()
+    catalog = store_catalog()
     slots = list_pickup_slots()
     sw = same_week_status()
     return {
@@ -561,7 +571,7 @@ def admin_dashboard():
     orders = list_orders(batch_week=selected)
     counts = aggregate_cookie_counts(orders)
     products = aggregate_product_summary(orders)
-    catalog = Config.cookie_catalog()
+    catalog = store_catalog(include_inactive=True)
     pickup_dates = batch_pickup_dates(selected)
 
     count_rows = []
@@ -637,7 +647,7 @@ def admin_print_counts():
     orders = list_orders(batch_week=selected)
     counts = aggregate_cookie_counts(orders)
     products = aggregate_product_summary(orders)
-    catalog = Config.cookie_catalog()
+    catalog = store_catalog(include_inactive=True)
     count_rows = []
     total_cookies = 0
     for cookie_id, info in catalog.items():
@@ -659,7 +669,7 @@ def admin_print_counts():
 def _label_rows_for_batch(selected: str) -> tuple[list[dict], int]:
     orders = list_orders(batch_week=selected)
     counts = aggregate_cookie_counts(orders)
-    catalog = Config.cookie_catalog()
+    catalog = store_catalog(include_inactive=True)
     rows = []
     total = 0
     for cookie_id, info in catalog.items():
@@ -714,9 +724,14 @@ def admin_print_labels_pdf():
     try:
         from labels.generate_labels import build_labels_pdf
 
+        extra = {}
+        seasonal_flavor = seasonal_label_flavor()
+        if seasonal_flavor:
+            extra[SEASONAL_ID] = seasonal_flavor
         pdf = build_labels_pdf(
             qty_map,
             title=f"Scratch Cookie Cottage labels — {batch_week_label(selected)}",
+            extra_flavors=extra,
         )
     except ImportError:
         flash(
@@ -734,6 +749,111 @@ def admin_print_labels_pdf():
         mimetype="application/pdf",
         as_attachment=True,
         download_name=filename,
+    )
+
+
+MAJOR_ALLERGENS = (
+    "Wheat",
+    "Eggs",
+    "Milk",
+    "Soy",
+    "Peanuts",
+    "Tree nuts",
+    "Sesame",
+    "Fish",
+    "Shellfish",
+)
+ALLOWED_PHOTO_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
+
+def _build_allergen_line(selected: list[str], tree_nuts: str) -> str:
+    parts = []
+    tree_nuts = (tree_nuts or "").strip()
+    for name in MAJOR_ALLERGENS:
+        if name not in selected:
+            continue
+        if name == "Tree nuts" and tree_nuts:
+            parts.append(f"Tree nuts ({tree_nuts})")
+        else:
+            parts.append(name)
+    return ", ".join(parts)
+
+
+def _save_uploaded_seasonal_photos(files) -> int:
+    from uuid import uuid4
+    from werkzeug.utils import secure_filename
+
+    saved = 0
+    dest_dir = seasonal_upload_dir()
+    for storage in files:
+        if not storage or not storage.filename:
+            continue
+        ext = os.path.splitext(storage.filename)[1].lower()
+        if ext not in ALLOWED_PHOTO_EXT:
+            continue
+        safe = secure_filename(storage.filename) or f"photo{ext}"
+        filename = f"{uuid4().hex[:10]}_{safe}"
+        storage.save(os.path.join(dest_dir, filename))
+        add_seasonal_image(filename)
+        saved += 1
+    return saved
+
+
+@app.route("/admin/seasonal", methods=["GET", "POST"])
+@admin_required
+def admin_seasonal():
+    if request.method == "POST":
+        action = request.form.get("action") or "save"
+        if action == "delete_photo":
+            try:
+                image_id = int(request.form.get("image_id") or "0")
+            except ValueError:
+                image_id = 0
+            filename = delete_seasonal_image(image_id)
+            if filename:
+                path = os.path.join(seasonal_upload_dir(), filename)
+                if os.path.isfile(path):
+                    os.remove(path)
+            flash("Photo removed.", "ok")
+            return redirect(url_for("admin_seasonal"))
+
+        selected = request.form.getlist("allergen")
+        tree_nuts = request.form.get("tree_nuts") or ""
+        save_seasonal(
+            name=request.form.get("name") or "",
+            description=request.form.get("description") or "",
+            ingredients=request.form.get("ingredients") or "",
+            allergens=_build_allergen_line(selected, tree_nuts),
+            active=request.form.get("active") == "1",
+        )
+        uploaded = _save_uploaded_seasonal_photos(request.files.getlist("photos"))
+        if uploaded:
+            flash(f"Saved listing and added {uploaded} photo(s).", "ok")
+        else:
+            flash("Seasonal listing saved.", "ok")
+        return redirect(url_for("admin_seasonal"))
+
+    listing = get_seasonal()
+    allergen_line = listing.get("allergens") or ""
+    selected = []
+    tree_nuts = ""
+    for chunk in [c.strip() for c in allergen_line.split(",") if c.strip()]:
+        low = chunk.lower()
+        if low.startswith("tree nuts"):
+            selected.append("Tree nuts")
+            if "(" in chunk:
+                tree_nuts = chunk.split("(", 1)[1].split(")", 1)[0].strip()
+            continue
+        for name in MAJOR_ALLERGENS:
+            if name.lower() == low:
+                selected.append(name)
+                break
+    return render_template(
+        "admin/seasonal.html",
+        listing=listing,
+        major_allergens=MAJOR_ALLERGENS,
+        selected_allergens=selected,
+        tree_nuts=tree_nuts,
     )
 
 

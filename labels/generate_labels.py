@@ -118,14 +118,22 @@ def flavor_for_cookie_id(cookie_id: str):
     return FLAVOR_BY_ID.get(flavor_id)
 
 
-def build_labels_pdf(qty_by_cookie_id, title=None):
+def build_labels_pdf(qty_by_cookie_id, title=None, extra_flavors=None):
     """Build Avery 5163 sheets for the given cookie_id -> count map."""
+    extra_flavors = extra_flavors or {}
     queue: list[dict] = []
-    for cookie_id, flavor_id in COOKIE_ID_TO_FLAVOR_ID.items():
+    order = list(COOKIE_ID_TO_FLAVOR_ID.keys())
+    for cookie_id in extra_flavors:
+        if cookie_id not in order:
+            order.insert(0, cookie_id)
+    for cookie_id in order:
         qty = int(qty_by_cookie_id.get(cookie_id, 0) or 0)
         if qty <= 0:
             continue
-        flavor = FLAVOR_BY_ID[flavor_id]
+        if cookie_id in extra_flavors:
+            flavor = extra_flavors[cookie_id]
+        else:
+            flavor = FLAVOR_BY_ID[COOKIE_ID_TO_FLAVOR_ID[cookie_id]]
         queue.extend([flavor] * qty)
     if not queue:
         raise ValueError("No labels to print")

@@ -13,7 +13,14 @@
 
   <div class="cookie-grid">
     {% for cookie_id, cookie in catalog.items() %}
-    <div class="cookie-card">
+    <div class="cookie-card{% if cookie.seasonal %} is-seasonal{% endif %}">
+      {% if cookie.seasonal and cookie.images %}
+      <div class="cookie-photo rotator" data-rotate>
+        {% for src in cookie.images %}
+          <img src="{% if src.startswith('http') %}{{ src }}{% else %}{{ url_for('static', filename=src) }}{% endif %}" alt="{{ cookie.name }}" {% if loop.first %}class="is-on"{% endif %}>
+        {% endfor %}
+      </div>
+      {% else %}
       <div class="cookie-photo{% if cookie.img_default and cookie.img_hover %} has-alt{% endif %}">
         {% if cookie.img_default %}
           <img class="img-default" src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}" alt="{{ cookie.name }}">
@@ -24,7 +31,9 @@
           <div class="photo-placeholder">{{ cookie.name }}</div>
         {% endif %}
       </div>
+      {% endif %}
       <div class="cookie-body">
+        {% if cookie.seasonal %}<p class="seasonal-badge">Seasonal rotation</p>{% endif %}
         <h3 class="script">{{ cookie.name }}</h3>
         <p>{{ cookie.description }}</p>
       </div>
@@ -49,7 +58,7 @@
     <h2>Pricing</h2>
     <p><strong>Individual cookies</strong> — {{ price_individual | money }} each</p>
     <p><strong>Build-your-own 6-pack</strong> (half dozen) — {{ price_six_pack | money }}</p>
-    <p>Mix any of our four flavors in your 6-pack.</p>
+    <p>Mix any of our flavors in your 6-pack.</p>
   </div>
 
   <div class="btn-row">

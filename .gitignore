@@ -9,3 +9,6 @@ android-admin/.idea/
 android-admin/local.properties
 android-admin/app/build/
 android-admin/build/
+
+static/images/seasonal/*
+!static/images/seasonal/.gitkeep
