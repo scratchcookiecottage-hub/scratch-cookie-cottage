@@ -602,6 +602,7 @@ def admin_dashboard():
         pickup_saturday_orders=sat,
         push_phone_count=len(list_push_tokens()),
         firebase_ready=bool(Config.FIREBASE_CREDENTIALS),
+        seasonal=get_seasonal(),
     )
 
 
@@ -816,6 +817,25 @@ def admin_seasonal():
                     os.remove(path)
             flash("Photo removed.", "ok")
             return redirect(url_for("admin_seasonal"))
+
+        if action == "set_visible":
+            listing = get_seasonal()
+            show = request.form.get("active") == "1"
+            save_seasonal(
+                name=listing["name"],
+                description=listing.get("description") or "",
+                ingredients=listing.get("ingredients") or "",
+                allergens=listing.get("allergens") or "",
+                active=show,
+            )
+            flash(
+                "Seasonal cookie is now visible on the website."
+                if show
+                else "Seasonal cookie is hidden from the website.",
+                "ok",
+            )
+            nxt = request.form.get("next") or url_for("admin_seasonal")
+            return redirect(nxt)
 
         selected = request.form.getlist("allergen")
         tree_nuts = request.form.get("tree_nuts") or ""

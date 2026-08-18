@@ -23,10 +23,19 @@
     </div>
 
     <div class="field">
+      <p style="margin:0 0 8px;">
+        Website visibility:
+        {% if listing.active %}
+          <strong>shown</strong> on the homepage and order form
+        {% else %}
+          <strong>hidden</strong> from the homepage and order form
+        {% endif %}
+      </p>
       <label>
         <input type="checkbox" name="active" value="1" {% if listing.active %}checked{% endif %}>
-        Show on the website and order form
+        Show this cookie on the website
       </label>
+      <p class="section-note">Uncheck this to hide it from customers. You can still edit it and print labels.</p>
     </div>
 
     <h2 style="font-size:1.2rem; margin:24px 0 8px;">Photos</h2>

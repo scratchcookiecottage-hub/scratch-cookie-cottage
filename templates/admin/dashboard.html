@@ -30,6 +30,29 @@
 
   <div class="panel" style="text-align:left; margin-bottom:20px;">
     <p style="margin:0 0 10px;">
+      <strong>Seasonal cookie:</strong> {{ seasonal.name }}
+      {% if seasonal.active %}
+        — <strong>shown</strong> on the website
+      {% else %}
+        — <strong>hidden</strong> from the website
+      {% endif %}
+    </p>
+    <form method="post" action="{{ url_for('admin_seasonal') }}" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+      <input type="hidden" name="action" value="set_visible">
+      <input type="hidden" name="next" value="{{ url_for('admin_dashboard', batch=selected_batch) }}">
+      {% if seasonal.active %}
+        <input type="hidden" name="active" value="0">
+        <button type="submit" class="btn secondary">Hide from website</button>
+      {% else %}
+        <input type="hidden" name="active" value="1">
+        <button type="submit" class="btn">Show on website</button>
+      {% endif %}
+      <a class="btn secondary" href="{{ url_for('admin_seasonal') }}">Edit listing</a>
+    </form>
+  </div>
+
+  <div class="panel" style="text-align:left; margin-bottom:20px;">
+    <p style="margin:0 0 10px;">
       Phone notifications:
       {% if firebase_ready %}Firebase key is set.{% else %}Firebase key is <strong>not</strong> set in .env.{% endif %}
       {{ push_phone_count }} phone(s) registered.
