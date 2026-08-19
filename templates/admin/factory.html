@@ -41,7 +41,7 @@
     {% if not drive_ok %}
       <p><strong>Drive is not connected yet.</strong> {{ drive_status }}</p>
     {% endif %}
-    <form method="post" enctype="multipart/form-data">
+    <form id="factory-upload" method="post" enctype="multipart/form-data">
       <input type="hidden" name="action" value="upload">
       <div class="field">
         <label for="flavor">Flavor / bin</label>
@@ -53,9 +53,15 @@
       </div>
       <div class="field">
         <label for="files">Photos or videos</label>
-        <input id="files" name="files" type="file" accept="image/*,video/*,.heic,.mov,.mp4" multiple>
+        <input id="files" name="files" type="file" accept="image/*,video/*" multiple>
+        <input id="files-camera" name="files" type="file" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;">
+        <div class="btn-row" style="justify-content:flex-start;margin:10px 0 0;">
+          <button type="button" class="btn secondary" id="pick-files">Choose from gallery</button>
+          <button type="button" class="btn secondary" id="take-photo">Take photo</button>
+        </div>
+        <p class="section-note" id="file-picked">No files selected yet.</p>
       </div>
-      <button class="btn" type="submit" {% if not drive_ok %}disabled{% endif %}>Upload to Drive</button>
+      <button class="btn" type="submit">Upload to Drive</button>
     </form>
   </div>
 
@@ -76,4 +82,38 @@
     </ul>
   </div>
   {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var files = document.getElementById("files");
+  var camera = document.getElementById("files-camera");
+  var picked = document.getElementById("file-picked");
+  var form = document.getElementById("factory-upload");
+  function show(input) {
+    if (!picked || !input || !input.files || !input.files.length) {
+      if (picked) picked.textContent = "No files selected yet.";
+      return;
+    }
+    var names = [];
+    for (var i = 0; i < input.files.length; i++) names.push(input.files[i].name);
+    picked.textContent = "Selected: " + names.join(", ");
+  }
+  var pick = document.getElementById("pick-files");
+  var take = document.getElementById("take-photo");
+  if (pick && files) pick.addEventListener("click", function () { files.click(); });
+  if (take && camera) take.addEventListener("click", function () { camera.click(); });
+  if (files) files.addEventListener("change", function () { show(files); });
+  if (camera) camera.addEventListener("change", function () { show(camera); });
+  if (form) {
+    form.addEventListener("submit", function (ev) {
+      var has = (files && files.files && files.files.length) || (camera && camera.files && camera.files.length);
+      if (!has) {
+        ev.preventDefault();
+        alert("Choose a photo or video first.");
+      }
+    });
+  }
+})();
+</script>
 {% endblock %}

@@ -45,10 +45,28 @@ class MainActivity : AppCompatActivity() {
             val uris = linkedSetOf<Uri>()
             data?.clipData?.let { clip ->
                 for (i in 0 until clip.itemCount) {
-                    clip.getItemAt(i).uri?.let(uris::add)
+                    clip.getItemAt(i).uri?.let { uri ->
+                        try {
+                            contentResolver.takePersistableUriPermission(
+                                uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                            )
+                        } catch (_: Exception) {
+                        }
+                        uris.add(uri)
+                    }
                 }
             }
-            data?.data?.let(uris::add)
+            data?.data?.let { uri ->
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                    )
+                } catch (_: Exception) {
+                }
+                uris.add(uri)
+            }
             callback.onReceiveValue(if (uris.isEmpty()) null else uris.toTypedArray())
         }
 
@@ -110,20 +128,16 @@ class MainActivity : AppCompatActivity() {
             ): Boolean {
                 filePathCallback?.onReceiveValue(null)
                 filePathCallback = callback
-                val intent = fileChooserParams?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = "*/*"
-                }
-                val accept = fileChooserParams?.acceptTypes?.joinToString(",") ?: ""
-                if (accept.contains("video") || accept.contains("*/*")) {
-                    intent.type = "*/*"
-                    intent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
-                }
-                if (fileChooserParams?.mode == FileChooserParams.MODE_OPEN_MULTIPLE) {
-                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                 }
                 return try {
-                    fileChooser.launch(intent)
+                    fileChooser.launch(Intent.createChooser(intent, "Choose photo or video"))
                     true
                 } catch (_: Exception) {
                     filePathCallback = null

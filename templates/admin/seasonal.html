@@ -42,7 +42,13 @@
     <p class="section-note">These rotate on the homepage. Upload 1–8 photos (JPG, PNG, or WebP).</p>
     <div class="field">
       <label for="photos">Add photos</label>
-      <input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+      <input type="file" id="photos" name="photos" accept="image/*" multiple>
+      <input id="photos-camera" name="photos" type="file" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;">
+      <div class="btn-row" style="justify-content:flex-start;margin:10px 0 0;">
+        <button type="button" class="btn secondary" id="pick-photos">Choose from gallery</button>
+        <button type="button" class="btn secondary" id="take-seasonal-photo">Take photo</button>
+      </div>
+      <p class="section-note" id="photo-picked">No photos selected yet. Choose files, then tap Save seasonal cookie.</p>
     </div>
 
     <h2 style="font-size:1.2rem; margin:24px 0 8px;">Cottage-food label</h2>
@@ -91,4 +97,25 @@
     </div>
   </div>
   {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var files = document.getElementById("photos");
+  var camera = document.getElementById("photos-camera");
+  var picked = document.getElementById("photo-picked");
+  function show(input) {
+    if (!picked || !input || !input.files || !input.files.length) return;
+    var names = [];
+    for (var i = 0; i < input.files.length; i++) names.push(input.files[i].name);
+    picked.textContent = "Selected: " + names.join(", ") + " — tap Save seasonal cookie.";
+  }
+  var pick = document.getElementById("pick-photos");
+  var take = document.getElementById("take-seasonal-photo");
+  if (pick && files) pick.addEventListener("click", function () { files.click(); });
+  if (take && camera) take.addEventListener("click", function () { camera.click(); });
+  if (files) files.addEventListener("change", function () { show(files); });
+  if (camera) camera.addEventListener("change", function () { show(camera); });
+})();
+</script>
 {% endblock %}
