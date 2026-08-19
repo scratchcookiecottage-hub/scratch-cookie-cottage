@@ -1,3 +1,4 @@
+import json
 import os
 from dotenv import load_dotenv
 
@@ -86,6 +87,40 @@ class Config:
         "DATABASE_PATH",
         os.path.join(os.path.dirname(__file__), "data", "orders.db"),
     )
+
+    # Content factory ↔ admin (same secret the factory uses to push shots)
+    FACTORY_SECRET = os.getenv("FACTORY_SECRET", "").strip() or os.getenv(
+        "PUSH_REGISTER_SECRET", ""
+    ).strip()
+    FACTORY_DRIVE_DROP_FOLDER_ID = os.getenv(
+        "FACTORY_DRIVE_DROP_FOLDER_ID",
+        "1U9G8Ajl5yfXHlzpwLd9iKY1M6tMEBRGl",
+    ).strip()
+    FACTORY_DRIVE_DROP_URL = os.getenv(
+        "FACTORY_DRIVE_DROP_URL",
+        "https://drive.google.com/drive/folders/1U9G8Ajl5yfXHlzpwLd9iKY1M6tMEBRGl",
+    ).strip()
+    FACTORY_SHOTS_DOC_ID = os.getenv(
+        "FACTORY_SHOTS_DOC_ID",
+        "1QbKiuTuagaNv37k0xSvkWJdsfuP-0iFcXnhRkteI8ec",
+    ).strip()
+    FACTORY_SHOTS_DOC_URL = os.getenv(
+        "FACTORY_SHOTS_DOC_URL",
+        "https://docs.google.com/document/d/1QbKiuTuagaNv37k0xSvkWJdsfuP-0iFcXnhRkteI8ec/edit",
+    ).strip()
+    GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "").strip()
+    GOOGLE_SERVICE_ACCOUNT_JSON = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
+
+    @classmethod
+    def google_service_account_info(cls) -> dict | None:
+        raw = cls.GOOGLE_SERVICE_ACCOUNT_JSON
+        if raw:
+            return json.loads(raw)
+        path = cls.GOOGLE_SERVICE_ACCOUNT_FILE
+        if path and os.path.isfile(path):
+            with open(path, encoding="utf-8") as fh:
+                return json.load(fh)
+        return None
 
     @classmethod
     def stripe_enabled(cls) -> bool:

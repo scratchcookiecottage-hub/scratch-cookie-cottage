@@ -229,6 +229,18 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
   display: block;
 }
 
+.shots-board {
+  white-space: pre-wrap;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  background: #fff;
+  border: 1px solid #d4c4b5;
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
 .allergen-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));

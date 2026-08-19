@@ -112,7 +112,12 @@ class MainActivity : AppCompatActivity() {
                 filePathCallback = callback
                 val intent = fileChooserParams?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "image/*"
+                    type = "*/*"
+                }
+                val accept = fileChooserParams?.acceptTypes?.joinToString(",") ?: ""
+                if (accept.contains("video") || accept.contains("*/*")) {
+                    intent.type = "*/*"
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
                 }
                 if (fileChooserParams?.mode == FileChooserParams.MODE_OPEN_MULTIPLE) {
                     intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)

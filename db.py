@@ -103,6 +103,15 @@ def init_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS factory_shots (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                body TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
         existing = conn.execute(
             "SELECT id FROM seasonal_listing WHERE id = 1"
         ).fetchone()
@@ -379,6 +388,26 @@ def store_catalog(*, include_inactive: bool = False) -> dict:
         }
     catalog.update(Config.cookie_catalog())
     return catalog
+
+
+def get_factory_shots() -> dict:
+    with get_db() as conn:
+        row = conn.execute("SELECT body, updated_at FROM factory_shots WHERE id = 1").fetchone()
+    if not row:
+        return {"body": "", "updated_at": ""}
+    return {"body": row["body"] or "", "updated_at": row["updated_at"] or ""}
+
+
+def save_factory_shots(body: str) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db() as conn:
+        conn.execute(
+            """
+            INSERT INTO factory_shots (id, body, updated_at) VALUES (1, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET body = excluded.body, updated_at = excluded.updated_at
+            """,
+            ((body or "").strip(), now),
+        )
 
 
 def seasonal_label_flavor() -> Optional[dict]:

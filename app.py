@@ -28,12 +28,14 @@ from db import (
     get_order_by_id,
     get_order_by_number,
     get_order_by_stripe_session,
+    get_factory_shots,
     get_seasonal,
     init_db,
     list_batch_weeks,
     list_orders,
     list_push_tokens,
     save_push_token,
+    save_factory_shots,
     save_seasonal,
     seasonal_label_flavor,
     seasonal_upload_dir,
@@ -59,7 +61,7 @@ from order_window import (
 app = Flask(__name__)
 app.config.from_object(Config)
 app.secret_key = Config.SECRET_KEY
-app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 120 * 1024 * 1024
 
 if Config.stripe_enabled():
     stripe.api_key = Config.STRIPE_SECRET_KEY
@@ -783,6 +785,15 @@ MAJOR_ALLERGENS = (
     "Shellfish",
 )
 ALLOWED_PHOTO_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+ALLOWED_FACTORY_EXT = ALLOWED_PHOTO_EXT | {".heic", ".mp4", ".mov", ".m4v", ".webm"}
+FACTORY_FLAVORS = (
+    ("chocolate_chip", "Brown Butter Chocolate Chip"),
+    ("macadamia", "Macadamia White Chocolate"),
+    ("salted_caramel", "Salted Caramel Chocolate Pecan"),
+    ("peanut_butter", "White Miso Peanut Butter"),
+    ("seasonal", "Seasonal rotation"),
+    ("unsorted", "Unsorted / other"),
+)
 
 
 def _build_allergen_line(selected: list[str], tree_nuts: str) -> str:
@@ -816,6 +827,108 @@ def _save_uploaded_seasonal_photos(files) -> int:
         add_seasonal_image(filename)
         saved += 1
     return saved
+
+
+def _factory_authorized() -> bool:
+    secret = (
+        (request.headers.get("X-Factory-Secret") or "")
+        or (request.headers.get("X-Push-Secret") or "")
+        or (request.args.get("secret") or "")
+    ).strip()
+    expected = Config.FACTORY_SECRET
+    return bool(expected) and secret == expected
+
+
+@app.route("/api/factory/shots", methods=["GET", "POST"])
+def api_factory_shots():
+    if request.method == "POST":
+        if not _factory_authorized():
+            return jsonify({"ok": False, "error": "unauthorized"}), 401
+        data = request.get_json(silent=True) or {}
+        body = (data.get("body") or data.get("text") or "").strip()
+        save_factory_shots(body)
+        return jsonify({"ok": True})
+    shots = get_factory_shots()
+    return jsonify({"ok": True, **shots})
+
+
+@app.route("/admin/factory", methods=["GET", "POST"])
+@admin_required
+def admin_factory():
+    import drive_sync
+
+    shots_error = ""
+    upload_error = ""
+    if request.method == "POST":
+        action = request.form.get("action") or "upload"
+        if action == "refresh_shots":
+            try:
+                body = drive_sync.read_shots_doc()
+                save_factory_shots(body)
+                flash("Shots needed refreshed from Google Drive.", "ok")
+            except Exception as exc:
+                flash(f"Could not read the shots doc: {exc}", "error")
+            return redirect(url_for("admin_factory"))
+
+        flavor = (request.form.get("flavor") or "unsorted").strip()
+        allowed = {key for key, _ in FACTORY_FLAVORS}
+        if flavor not in allowed:
+            flavor = "unsorted"
+        saved = 0
+        files = request.files.getlist("files")
+        if not files or not any(f.filename for f in files):
+            flash("Choose a photo or video first.", "error")
+            return redirect(url_for("admin_factory"))
+        if not drive_sync.drive_ready():
+            flash(
+                "Drive upload is not configured yet. Add a Google service account "
+                "and share the drop folder with it.",
+                "error",
+            )
+            return redirect(url_for("admin_factory"))
+        from werkzeug.utils import secure_filename
+        from uuid import uuid4
+
+        try:
+            for storage in files:
+                if not storage or not storage.filename:
+                    continue
+                ext = os.path.splitext(storage.filename)[1].lower()
+                if ext not in ALLOWED_FACTORY_EXT:
+                    continue
+                safe = secure_filename(storage.filename) or f"clip{ext}"
+                name = f"{flavor}_{uuid4().hex[:6]}_{safe}"
+                drive_sync.upload_to_drop(name, storage.read(), storage.mimetype)
+                saved += 1
+        except Exception as exc:
+            upload_error = str(exc)
+            flash(f"Drive upload failed: {exc}", "error")
+            return redirect(url_for("admin_factory"))
+        if saved:
+            flash(f"Uploaded {saved} file(s) to the factory Drive drop folder.", "ok")
+        else:
+            flash("No supported files in that upload (use jpg, png, heic, mp4, mov).", "error")
+        return redirect(url_for("admin_factory"))
+
+    shots = get_factory_shots()
+    drop_files = []
+    drive_ok = drive_sync.drive_ready()
+    if drive_ok:
+        try:
+            drop_files = drive_sync.list_drop_files(12)
+        except Exception as exc:
+            shots_error = str(exc)
+    return render_template(
+        "admin/factory.html",
+        shots=shots,
+        shots_error=shots_error,
+        upload_error=upload_error,
+        drive_ok=drive_ok,
+        drop_files=drop_files,
+        flavors=FACTORY_FLAVORS,
+        drop_url=Config.FACTORY_DRIVE_DROP_URL,
+        shots_url=Config.FACTORY_SHOTS_DOC_URL,
+    )
 
 
 @app.route("/admin/seasonal", methods=["GET", "POST"])
