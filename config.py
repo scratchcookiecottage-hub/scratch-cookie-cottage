@@ -112,14 +112,27 @@ class Config:
     GOOGLE_SERVICE_ACCOUNT_JSON = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
 
     @classmethod
+    def google_service_account_paths(cls) -> list:
+        home = os.path.expanduser("~")
+        here = os.path.dirname(os.path.abspath(__file__))
+        return [
+            cls.GOOGLE_SERVICE_ACCOUNT_FILE,
+            os.path.join(here, "secrets", "google-sa.json"),
+            os.path.join(home, "google-sa.json"),
+            os.path.join(home, "scratch-cookie-cottage", "secrets", "google-sa.json"),
+            "/home/scratchcookiecottage/google-sa.json",
+            "/home/scratchcookiecottage/scratch-cookie-cottage/secrets/google-sa.json",
+        ]
+
+    @classmethod
     def google_service_account_info(cls) -> dict | None:
         raw = cls.GOOGLE_SERVICE_ACCOUNT_JSON
         if raw:
             return json.loads(raw)
-        path = cls.GOOGLE_SERVICE_ACCOUNT_FILE
-        if path and os.path.isfile(path):
-            with open(path, encoding="utf-8") as fh:
-                return json.load(fh)
+        for path in cls.google_service_account_paths():
+            if path and os.path.isfile(path):
+                with open(path, encoding="utf-8") as fh:
+                    return json.load(fh)
         return None
 
     @classmethod

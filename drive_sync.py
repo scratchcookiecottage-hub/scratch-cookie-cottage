@@ -28,8 +28,32 @@ MIME_BY_EXT = {
 }
 
 
+def google_client_installed() -> bool:
+    try:
+        import googleapiclient.discovery  # noqa: F401
+        from google.oauth2 import service_account  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
 def drive_ready() -> bool:
-    return bool(Config.google_service_account_info())
+    return google_client_installed() and bool(Config.google_service_account_info())
+
+
+def drive_status() -> str:
+    if not google_client_installed():
+        return (
+            "Google Drive library is not installed. In a PythonAnywhere Bash console, "
+            "activate your virtualenv and run: pip install google-api-python-client google-auth"
+        )
+    if not Config.google_service_account_info():
+        return (
+            "No service-account JSON found. Upload google-sa.json to "
+            "secrets/google-sa.json on the server (or set GOOGLE_SERVICE_ACCOUNT_FILE)."
+        )
+    return ""
 
 
 def _credentials():

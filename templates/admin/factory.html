@@ -39,7 +39,7 @@
       Name the flavor so the factory files it correctly.
     </p>
     {% if not drive_ok %}
-      <p><strong>Drive is not connected on the server yet.</strong> Add a Google service account JSON, then share the drop folder and shots doc with that account’s email.</p>
+      <p><strong>Drive is not connected yet.</strong> {{ drive_status }}</p>
     {% endif %}
     <form method="post" enctype="multipart/form-data">
       <input type="hidden" name="action" value="upload">

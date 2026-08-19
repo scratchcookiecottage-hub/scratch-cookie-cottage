@@ -2,8 +2,13 @@
 __pycache__/
 *.pyc
 .env
+secrets/
+*.json
+!package.json
+!package-lock.json
 data/*.db
 .DS_Store
+GROK_HANDOFF.md
 android-admin/.gradle/
 android-admin/.idea/
 android-admin/local.properties

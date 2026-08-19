@@ -862,6 +862,9 @@ def admin_factory():
     if request.method == "POST":
         action = request.form.get("action") or "upload"
         if action == "refresh_shots":
+            if not drive_sync.drive_ready():
+                flash(drive_sync.drive_status() or "Drive is not connected.", "error")
+                return redirect(url_for("admin_factory"))
             try:
                 body = drive_sync.read_shots_doc()
                 save_factory_shots(body)
@@ -880,11 +883,7 @@ def admin_factory():
             flash("Choose a photo or video first.", "error")
             return redirect(url_for("admin_factory"))
         if not drive_sync.drive_ready():
-            flash(
-                "Drive upload is not configured yet. Add a Google service account "
-                "and share the drop folder with it.",
-                "error",
-            )
+            flash(drive_sync.drive_status() or "Drive is not connected.", "error")
             return redirect(url_for("admin_factory"))
         from werkzeug.utils import secure_filename
         from uuid import uuid4
@@ -913,6 +912,7 @@ def admin_factory():
     shots = get_factory_shots()
     drop_files = []
     drive_ok = drive_sync.drive_ready()
+    drive_status = drive_sync.drive_status()
     if drive_ok:
         try:
             drop_files = drive_sync.list_drop_files(12)
@@ -924,6 +924,7 @@ def admin_factory():
         shots_error=shots_error,
         upload_error=upload_error,
         drive_ok=drive_ok,
+        drive_status=drive_status,
         drop_files=drop_files,
         flavors=FACTORY_FLAVORS,
         drop_url=Config.FACTORY_DRIVE_DROP_URL,
