@@ -13,13 +13,14 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        fitBelowSystemBars(binding.root)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         val existing = Prefs.baseUrl(this)
         binding.urlInput.setText(existing.ifEmpty { Prefs.DEFAULT_URL })
-        binding.pushKeyInput.setText(Prefs.pushSecret(this))
+        binding.pushKeyInput.setText(Prefs.pushSecret(this).ifEmpty { Prefs.DEFAULT_PUSH_SECRET })
 
         binding.saveButton.setOnClickListener {
             val raw = binding.urlInput.text?.toString().orEmpty().trim()

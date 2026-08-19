@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        fitBelowSystemBars(binding.root)
         setSupportActionBar(binding.toolbar)
         requestNotificationPermission()
         PushRegistrar.register(this)
