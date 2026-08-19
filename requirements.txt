@@ -5,5 +5,5 @@ pytz>=2024.1
 gunicorn>=22.0.0
 firebase-admin>=6.5.0
 reportlab>=4.0.0
-google-api-python-client>=2.140.0
+requests>=2.32.0
 google-auth>=2.29.0

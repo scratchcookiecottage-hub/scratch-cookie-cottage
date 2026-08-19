@@ -395,10 +395,14 @@ def get_factory_shots() -> dict:
         row = conn.execute("SELECT body, updated_at FROM factory_shots WHERE id = 1").fetchone()
     if not row:
         return {"body": "", "updated_at": ""}
-    return {"body": row["body"] or "", "updated_at": row["updated_at"] or ""}
+    from drive_sync import decode_drive_text
+
+    return {"body": decode_drive_text(row["body"] or ""), "updated_at": row["updated_at"] or ""}
 
 
 def save_factory_shots(body: str) -> None:
+    from drive_sync import decode_drive_text
+
     now = datetime.now(timezone.utc).isoformat()
     with get_db() as conn:
         conn.execute(
@@ -406,7 +410,7 @@ def save_factory_shots(body: str) -> None:
             INSERT INTO factory_shots (id, body, updated_at) VALUES (1, ?, ?)
             ON CONFLICT(id) DO UPDATE SET body = excluded.body, updated_at = excluded.updated_at
             """,
-            ((body or "").strip(), now),
+            (decode_drive_text(body or "").strip(), now),
         )
 
 
