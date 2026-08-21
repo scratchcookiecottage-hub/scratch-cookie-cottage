@@ -3,6 +3,7 @@
 {% block content %}
   <h1>Admin</h1>
   <form class="order-form" method="post" style="max-width: 420px; margin: 0 auto;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field">
       <label for="username">Username</label>
       <input type="text" id="username" name="username" required autocomplete="username">

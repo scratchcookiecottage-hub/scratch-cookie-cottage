@@ -8,6 +8,7 @@
   </p>
 
   <form class="order-form" method="post" action="{{ url_for('wholesale') }}" style="max-width:560px; margin:0 auto;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="form-section">
       <div class="field" style="position:absolute; left:-9999px;" aria-hidden="true">
         <label for="company_url">Company website</label>

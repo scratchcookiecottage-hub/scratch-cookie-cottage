@@ -44,6 +44,7 @@ from db import (
     update_order_payment,
 )
 from notify import notify_new_order, send_admin_push, send_inquiry_email
+from security import apply_security, safe_equal, too_many
 from order_window import (
     batch_pickup_dates,
     batch_week_from_pickup_date,
@@ -62,6 +63,13 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.secret_key = Config.SECRET_KEY
 app.config["MAX_CONTENT_LENGTH"] = 120 * 1024 * 1024
+apply_security(app)
+
+
+@app.errorhandler(400)
+def handle_400(err):
+    flash(getattr(err, "description", None) or "That request could not be completed.", "error")
+    return redirect(request.referrer or url_for("index"))
 
 if Config.stripe_enabled():
     stripe.api_key = Config.STRIPE_SECRET_KEY
@@ -283,6 +291,10 @@ def merch():
 def wholesale():
     if request.method == "GET":
         return render_template("wholesale.html")
+
+    if too_many("wholesale", limit=8, window_seconds=3600):
+        flash("Too many messages from this network. Please try again later.", "error")
+        return render_template("wholesale.html", form=request.form), 429
 
     if (request.form.get("company_url") or "").strip():
         flash("Thanks — we received your inquiry.", "ok")
@@ -610,9 +622,12 @@ def api_window():
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
+        if too_many("admin_login", limit=8, window_seconds=900):
+            flash("Too many login attempts. Please wait a few minutes.", "error")
+            return render_template("admin/login.html"), 429
         user = request.form.get("username", "")
         password = request.form.get("password", "")
-        if user == Config.ADMIN_USERNAME and password == Config.ADMIN_PASSWORD:
+        if safe_equal(user, Config.ADMIN_USERNAME) and safe_equal(password, Config.ADMIN_PASSWORD):
             session["admin"] = True
             nxt = request.args.get("next") or url_for("admin_dashboard")
             return redirect(nxt)

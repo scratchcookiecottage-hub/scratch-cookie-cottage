@@ -15,6 +15,7 @@
       <a href="{{ shots_url }}" target="_blank" rel="noopener">open the Google Doc</a>.
     </p>
     <form method="post" style="margin:10px 0 16px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="refresh_shots">
       <button class="btn secondary" type="submit">Refresh from Drive</button>
     </form>
@@ -42,6 +43,7 @@
       <p><strong>Drive is not connected yet.</strong> {{ drive_status }}</p>
     {% endif %}
     <form id="factory-upload" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="upload">
       <div class="field">
         <label for="flavor">Flavor / bin</label>

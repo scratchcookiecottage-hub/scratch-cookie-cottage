@@ -23,6 +23,7 @@
     data-pickup-slots='{{ pickup_slots_json | tojson }}'
     data-selected-pickup="{{ form.get('pickup_date', '') if form else '' }}"
   >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <!-- Build your own 6-pack -->
     <div class="form-section">
       <h3>Build-your-own 6-pack — {{ price_six_pack | money }}</h3>

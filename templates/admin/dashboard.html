@@ -39,6 +39,7 @@
       {% endif %}
     </p>
     <form method="post" action="{{ url_for('admin_seasonal') }}" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="set_visible">
       <input type="hidden" name="next" value="{{ url_for('admin_dashboard', batch=selected_batch) }}">
       {% if seasonal.active %}
@@ -59,6 +60,7 @@
       {{ push_phone_count }} phone(s) registered.
     </p>
     <form method="post" action="{{ url_for('admin_notify_test') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="batch" value="{{ selected_batch }}">
       <button type="submit" class="btn secondary">Send test notification</button>
     </form>
@@ -149,6 +151,7 @@
           <td>{{ o.total_cents | money }}</td>
           <td>
             <form method="post" action="{{ url_for('admin_set_status', order_id=o.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="batch" value="{{ selected_batch }}">
               <select name="status" onchange="this.form.submit()">
                 {% for s in ['new','confirmed','baked','picked_up','delivered','cancelled'] %}

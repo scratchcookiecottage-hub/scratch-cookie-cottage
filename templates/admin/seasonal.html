@@ -10,6 +10,7 @@
   <p class="lead">This listing sits at the top of the cookie menu. Edit the name, photos, and label details anytime.</p>
 
   <form method="post" enctype="multipart/form-data" class="panel" style="text-align:left; max-width:720px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="action" value="save">
 
     <div class="field">
@@ -88,6 +89,7 @@
       <figure>
         <img src="{{ url_for('static', filename=img.path) }}" alt="">
         <form method="post" action="{{ url_for('admin_seasonal') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="delete_photo">
           <input type="hidden" name="image_id" value="{{ img.id }}">
           <button type="submit" class="btn secondary" style="margin-top:8px;">Remove</button>
