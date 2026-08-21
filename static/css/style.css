@@ -68,6 +68,20 @@ a { color: var(--brown); }
   font-size: 0.95rem;
 }
 
+.site-footer {
+  margin-top: 48px;
+  padding-top: 22px;
+  border-top: 1px solid var(--cream-dark);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.98rem;
+}
+
+.site-footer a {
+  font-weight: 400;
+  color: var(--brown);
+}
+
 h1, h2, .script {
   font-family: var(--script);
   font-weight: 400;
