@@ -1,11 +1,13 @@
 package com.scratchcookiecottage.admin
 
 import android.content.Context
+import android.webkit.CookieManager
 
 object Prefs {
     private const val FILE = "scc_admin"
     private const val KEY_BASE_URL = "base_url"
     const val DEFAULT_URL = "https://scratchcookiecottage.pythonanywhere.com"
+    const val DEFAULT_PUSH_SECRET = "c3fd997f3ec7c56f0ca681e4d151cec6"
 
     fun baseUrl(context: Context): String {
         val stored = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -27,10 +29,11 @@ object Prefs {
     }
 
     fun pushSecret(context: Context): String {
-        return context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+        val stored = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
             .getString("push_secret", "")
             .orEmpty()
             .trim()
+        return stored.ifEmpty { DEFAULT_PUSH_SECRET }
     }
 
     fun setPushSecret(context: Context, secret: String) {
@@ -44,5 +47,16 @@ object Prefs {
         val base = baseUrl(context)
         if (base.isEmpty()) return ""
         return "$base/admin"
+    }
+
+    fun writeAppGateCookie(context: Context) {
+        val base = baseUrl(context)
+        val secret = pushSecret(context)
+        if (base.isEmpty() || secret.isEmpty()) return
+        val cookies = CookieManager.getInstance()
+        cookies.setAcceptCookie(true)
+        val secure = if (base.startsWith("https", ignoreCase = true)) "; Secure" else ""
+        cookies.setCookie(base, "scc_app=$secret; Path=/$secure")
+        cookies.flush()
     }
 }

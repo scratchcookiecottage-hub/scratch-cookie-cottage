@@ -70,12 +70,32 @@ def too_many(bucket: str, limit: int, window_seconds: int) -> bool:
         return count > limit
 
 
+def admin_app_ok() -> bool:
+    """True if this request is from the SCC Admin app (or local with no secret set)."""
+    from config import Config
+
+    secret = Config.PUSH_REGISTER_SECRET
+    if not secret:
+        return True
+    sent = (
+        request.cookies.get("scc_app")
+        or request.headers.get("X-SCC-App")
+        or ""
+    ).strip()
+    return safe_equal(sent, secret)
+
+
 def apply_security(app):
     https = (app.config.get("PUBLIC_BASE_URL") or "").startswith("https://")
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = https
     app.jinja_env.globals["csrf_token"] = csrf_token
+
+    @app.before_request
+    def _admin_app_gate():
+        if request.path.startswith("/admin") and not admin_app_ok():
+            abort(404)
 
     @app.before_request
     def _csrf_guard():

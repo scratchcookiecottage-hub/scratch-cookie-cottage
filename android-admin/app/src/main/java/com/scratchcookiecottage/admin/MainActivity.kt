@@ -251,6 +251,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
             return
         }
-        binding.webView.loadUrl(url)
+        Prefs.writeAppGateCookie(this)
+        val headers = mapOf("X-SCC-App" to Prefs.pushSecret(this))
+        binding.webView.loadUrl(url, headers)
     }
 }
