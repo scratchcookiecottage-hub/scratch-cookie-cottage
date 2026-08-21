@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Wholesale — {{ business_name }}{% endblock %}
+{% block content %}
+  <h1>Bulk, custom &amp; wholesale</h1>
+  <p class="lead">
+    Events, offices, gift boxes, or larger standing orders — tell us what you need
+    and we’ll follow up by email.
+  </p>
+
+  <form class="order-form" method="post" action="{{ url_for('wholesale') }}" style="max-width:560px; margin:0 auto;">
+    <div class="form-section">
+      <div class="field" style="position:absolute; left:-9999px;" aria-hidden="true">
+        <label for="company_url">Company website</label>
+        <input type="text" id="company_url" name="company_url" tabindex="-1" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required
+               value="{{ form.get('name', '') if form else '' }}" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required
+               value="{{ form.get('email', '') if form else '' }}" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="description">About your order</label>
+        <textarea id="description" name="description" required rows="6"
+                  placeholder="Event date, quantity, flavors, delivery or pickup, and anything custom…">{{ form.get('description', '') if form else '' }}</textarea>
+      </div>
+      <div class="btn-row" style="justify-content:flex-start;">
+        <button type="submit" class="btn">Send inquiry</button>
+      </div>
+    </div>
+  </form>
+{% endblock %}

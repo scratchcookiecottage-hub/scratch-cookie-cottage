@@ -43,7 +43,7 @@ from db import (
     store_catalog,
     update_order_payment,
 )
-from notify import notify_new_order, send_admin_push
+from notify import notify_new_order, send_admin_push, send_inquiry_email
 from order_window import (
     batch_pickup_dates,
     batch_week_from_pickup_date,
@@ -91,6 +91,7 @@ def inject_globals():
         "catalog": store_catalog(),
         "price_individual": Config.PRICE_INDIVIDUAL_CENTS,
         "price_six_pack": Config.PRICE_SIX_PACK_CENTS,
+        "delivery_min": Config.DELIVERY_MIN_CENTS,
         "delivery_zips": Config.DELIVERY_ZIPS,
     }
 
@@ -278,6 +279,42 @@ def merch():
     )
 
 
+@app.route("/wholesale", methods=["GET", "POST"])
+def wholesale():
+    if request.method == "GET":
+        return render_template("wholesale.html")
+
+    if (request.form.get("company_url") or "").strip():
+        flash("Thanks — we received your inquiry.", "ok")
+        return redirect(url_for("wholesale"))
+
+    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip()
+    description = (request.form.get("description") or "").strip()
+    errors = []
+    if not name:
+        errors.append("Name is required.")
+    if not email or "@" not in email:
+        errors.append("A valid email is required.")
+    if not description:
+        errors.append("Please tell us about your order.")
+    if errors:
+        for e in errors:
+            flash(e, "error")
+        return render_template(
+            "wholesale.html",
+            form=request.form,
+        )
+    if send_inquiry_email(name, email, description):
+        flash("Thanks — your inquiry was sent. We’ll reply by email.", "ok")
+        return redirect(url_for("wholesale"))
+    flash(
+        "We could not send the message just now. Please email scratchcookiecottage@gmail.com.",
+        "error",
+    )
+    return render_template("wholesale.html", form=request.form)
+
+
 def _order_page_context(form=None):
     catalog = store_catalog()
     slots = list_pickup_slots()
@@ -285,6 +322,7 @@ def _order_page_context(form=None):
     return {
         "catalog": catalog,
         "delivery_fee": Config.DELIVERY_FEE_CENTS,
+        "delivery_min": Config.DELIVERY_MIN_CENTS,
         "publishable_key": Config.STRIPE_PUBLISHABLE_KEY,
         "price_individual": Config.PRICE_INDIVIDUAL_CENTS,
         "price_six_pack": Config.PRICE_SIX_PACK_CENTS,
@@ -360,6 +398,11 @@ def order():
 
     lines, subtotal, line_errors = build_line_items(singles, pack)
     errors.extend(line_errors)
+    if fulfillment == "delivery" and subtotal < Config.DELIVERY_MIN_CENTS:
+        errors.append(
+            f"Delivery requires a cookie total of at least "
+            f"${Config.DELIVERY_MIN_CENTS / 100:.2f}. Add more cookies or choose pickup."
+        )
 
     if errors:
         for e in errors:

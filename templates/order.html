@@ -18,6 +18,7 @@
     data-price-individual="{{ price_individual }}"
     data-price-six-pack="{{ price_six_pack }}"
     data-delivery-fee="{{ delivery_fee }}"
+    data-delivery-min="{{ delivery_min }}"
     data-allowed-zips='{{ delivery_zips.keys() | list | tojson }}'
     data-pickup-slots='{{ pickup_slots_json | tojson }}'
     data-selected-pickup="{{ form.get('pickup_date', '') if form else '' }}"
@@ -149,6 +150,11 @@
           {% if delivery_fee %}(+{{ delivery_fee | money }}){% endif %}
         </label>
       </div>
+      <p class="section-note">
+        Delivery is available for cookie totals of {{ delivery_min | money }} or more,
+        to ZIP codes in our service area.
+      </p>
+      <p id="delivery-min-feedback" class="pack-hint" style="margin-top:4px;"></p>
       <div id="delivery-fields">
         <div class="field">
           <label for="delivery_zip">Delivery ZIP code</label>

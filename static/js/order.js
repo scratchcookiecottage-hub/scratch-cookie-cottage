@@ -5,6 +5,7 @@
   const priceIndividual = parseInt(form.dataset.priceIndividual || "400", 10);
   const priceSixPack = parseInt(form.dataset.priceSixPack || "2000", 10);
   const deliveryFee = parseInt(form.dataset.deliveryFee || "0", 10);
+  const deliveryMin = parseInt(form.dataset.deliveryMin || "2000", 10);
 
   const fulfillmentInputs = form.querySelectorAll('input[name="fulfillment"]');
   const deliveryFields = document.getElementById("delivery-fields");
@@ -46,6 +47,20 @@
     if (subtotalEl) subtotalEl.textContent = money(subtotal);
     if (deliveryEl) deliveryEl.textContent = money(fee);
     if (totalEl) totalEl.textContent = money(subtotal + fee);
+
+    const minEl = document.getElementById("delivery-min-feedback");
+    if (minEl) {
+      if (fulfillment() === "delivery" && subtotal < deliveryMin) {
+        minEl.textContent =
+          "Delivery needs a cookie total of at least " +
+          money(deliveryMin) +
+          ". Add more cookies or choose pickup.";
+        minEl.className = "pack-hint warn";
+      } else {
+        minEl.textContent = "";
+        minEl.className = "pack-hint";
+      }
+    }
 
     if (singleSumEl) {
       singleSumEl.textContent =

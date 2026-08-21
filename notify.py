@@ -42,25 +42,47 @@ def order_summary(order: dict) -> tuple[str, str]:
     return title, body
 
 
-def send_admin_email(order: dict) -> None:
+def send_mail(subject: str, body: str, reply_to: str | None = None) -> bool:
     to_addr = Config.ADMIN_NOTIFY_EMAIL
     user = Config.SMTP_USER
     password = Config.SMTP_PASSWORD
     if not to_addr or not user or not password:
-        return
-    title, body = order_summary(order)
+        return False
     msg = EmailMessage()
-    msg["Subject"] = f"Scratch Cookie Cottage — {title}"
+    msg["Subject"] = subject
     msg["From"] = Config.SMTP_FROM or user
     msg["To"] = to_addr
+    if reply_to:
+        msg["Reply-To"] = reply_to
     msg.set_content(body)
     try:
         with smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT, timeout=20) as smtp:
             smtp.starttls()
             smtp.login(user, password)
             smtp.send_message(msg)
+        return True
     except Exception:
         log.exception("Admin email failed")
+        return False
+
+
+def send_admin_email(order: dict) -> None:
+    title, body = order_summary(order)
+    send_mail(f"Scratch Cookie Cottage — {title}", body)
+
+
+def send_inquiry_email(name: str, email: str, description: str) -> bool:
+    body = (
+        f"Bulk / custom / wholesale inquiry\n\n"
+        f"Name: {name}\n"
+        f"Email: {email}\n\n"
+        f"{description}\n"
+    )
+    return send_mail(
+        f"Scratch Cookie Cottage — Inquiry from {name}",
+        body,
+        reply_to=email,
+    )
 
 
 def send_admin_push(order: dict) -> str:

@@ -30,6 +30,7 @@ class Config:
     PRICE_INDIVIDUAL_CENTS = _int("PRICE_INDIVIDUAL_CENTS", 400)  # $4.00
     PRICE_SIX_PACK_CENTS = _int("PRICE_SIX_PACK_CENTS", 2000)  # $20.00
     DELIVERY_FEE_CENTS = _int("DELIVERY_FEE_CENTS", 0)
+    DELIVERY_MIN_CENTS = _int("DELIVERY_MIN_CENTS", 2000)  # $20.00 cookie subtotal
     # Local delivery: zips about 20 minutes from 78746 (West Lake Hills).
     DELIVERY_ZIPS = {
         "78701": "Downtown",
