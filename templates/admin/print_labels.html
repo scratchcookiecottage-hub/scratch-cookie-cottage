@@ -8,6 +8,7 @@
   <h1>Print cottage-food labels</h1>
   <p class="lead">{{ batch_label }} · {{ order_count }} paid order(s)</p>
   <p>Counts start from this week’s bake sheet. Change a number if you need extras or fewer, then download the Avery PDF (10 labels per Letter sheet).</p>
+  <p>The PDF also includes <strong>one packing label per paid order</strong> (customer name + what they ordered), printed first, then the cookie labels.</p>
 
   <form method="get" action="{{ url_for('admin_print_labels_pdf') }}" class="panel" style="text-align:left; max-width:560px;">
     <input type="hidden" name="batch" value="{{ selected_batch }}">
@@ -44,7 +45,11 @@
     </table>
 
     <p style="margin:16px 0 8px;">
-      <strong>Total labels:</strong> <span id="label-total">{{ total_labels }}</span>
+      <strong>Cookie labels:</strong> <span id="cookie-labels">{{ cookie_labels }}</span>
+      &nbsp;·&nbsp;
+      <strong>Order tickets:</strong> {{ order_label_count }}
+      &nbsp;·&nbsp;
+      <strong>Total:</strong> <span id="label-total">{{ total_labels }}</span>
       &nbsp;·&nbsp;
       <strong>Sheets:</strong> <span id="label-sheets">{{ sheets }}</span>
       <span style="color:var(--muted);"> (Avery 2″ × 4″, 10-up)</span>
@@ -67,19 +72,23 @@
   var inputs = document.querySelectorAll(".label-qty");
   var totalEl = document.getElementById("label-total");
   var sheetsEl = document.getElementById("label-sheets");
+  var extra = {{ order_label_count|int }};
+  var cookieEl = document.getElementById("cookie-labels");
   var ordered = {};
   {% for row in rows %}
   ordered[{{ row.id|tojson }}] = {{ row.ordered|int }};
   {% endfor %}
 
   function refresh() {
-    var total = 0;
+    var cookies = 0;
     inputs.forEach(function (el) {
       var n = parseInt(el.value, 10);
       if (isNaN(n) || n < 0) n = 0;
       if (n > 500) n = 500;
-      total += n;
+      cookies += n;
     });
+    var total = cookies + extra;
+    if (cookieEl) cookieEl.textContent = cookies;
     totalEl.textContent = total;
     sheetsEl.textContent = total === 0 ? 0 : Math.ceil(total / 10);
   }

@@ -745,6 +745,57 @@ def admin_print_counts():
     )
 
 
+def _order_item_summary(order: dict) -> list[str]:
+    pack_parts = []
+    singles = []
+    packs = 0
+    for item in order.get("items") or []:
+        qty = int(item.get("qty") or 0)
+        if qty <= 0:
+            continue
+        name = (
+            (item.get("name") or "")
+            .replace(" (individual)", "")
+            .replace(" (in 6-pack)", "")
+        )
+        kind = item.get("kind")
+        if kind == "single":
+            singles.append(f"{qty}× {name}")
+        elif kind == "six_pack_cookie":
+            pack_parts.append(f"{qty} {name}")
+        elif kind == "six_pack_fee":
+            packs = qty
+    lines = []
+    if packs:
+        mix = ", ".join(pack_parts)
+        line = f"{packs}× 6-pack"
+        if mix:
+            line += f" ({mix})"
+        lines.append(line)
+    lines.extend(singles)
+    return lines or ["(see order list)"]
+
+
+def _order_slip_payloads(orders: list[dict]) -> list[dict]:
+    slips = []
+    for order in orders:
+        when = ""
+        if order.get("pickup_date"):
+            when = format_pickup_date(order["pickup_date"])
+        elif order.get("pickup_day"):
+            when = str(order["pickup_day"]).capitalize()
+        slips.append(
+            {
+                "name": order.get("customer_name") or "Customer",
+                "order_number": order.get("order_number") or "",
+                "fulfillment": (order.get("fulfillment") or "pickup").capitalize(),
+                "when": when,
+                "lines": _order_item_summary(order),
+            }
+        )
+    return slips
+
+
 def _label_rows_for_batch(selected: str) -> tuple[list[dict], int]:
     orders = list_orders(batch_week=selected)
     counts = aggregate_cookie_counts(orders)
@@ -778,16 +829,20 @@ def _label_rows_for_batch(selected: str) -> tuple[list[dict], int]:
 @admin_required
 def admin_print_labels():
     selected = request.args.get("batch") or current_batch_week()
-    rows, total = _label_rows_for_batch(selected)
-    sheets = (total + 9) // 10
+    rows, cookie_total = _label_rows_for_batch(selected)
+    order_count = len(list_orders(batch_week=selected))
+    total = cookie_total + order_count
+    sheets = (total + 9) // 10 if total else 0
     return render_template(
         "admin/print_labels.html",
         rows=rows,
         total_labels=total,
+        cookie_labels=cookie_total,
+        order_label_count=order_count,
         sheets=sheets,
         selected_batch=selected,
         batch_label=batch_week_label(selected),
-        order_count=len(list_orders(batch_week=selected)),
+        order_count=order_count,
     )
 
 
@@ -795,8 +850,10 @@ def admin_print_labels():
 @admin_required
 def admin_print_labels_pdf():
     selected = request.args.get("batch") or current_batch_week()
-    rows, total = _label_rows_for_batch(selected)
-    if total <= 0:
+    rows, cookie_total = _label_rows_for_batch(selected)
+    orders = list_orders(batch_week=selected)
+    slips = _order_slip_payloads(orders)
+    if cookie_total <= 0 and not slips:
         flash("Enter at least one label to print.", "error")
         return redirect(url_for("admin_print_labels", batch=selected))
     qty_map = {row["id"]: row["qty"] for row in rows}
@@ -811,6 +868,7 @@ def admin_print_labels_pdf():
             qty_map,
             title=f"Scratch Cookie Cottage labels — {batch_week_label(selected)}",
             extra_flavors=extra,
+            order_slips=slips,
         )
     except ImportError:
         flash(
@@ -822,7 +880,7 @@ def admin_print_labels_pdf():
     except ValueError as exc:
         flash(str(exc), "error")
         return redirect(url_for("admin_print_labels", batch=selected))
-    filename = f"SCC-labels-{selected}-{total}.pdf"
+    filename = f"SCC-labels-{selected}-{cookie_total + len(slips)}.pdf"
     return send_file(
         BytesIO(pdf),
         mimetype="application/pdf",

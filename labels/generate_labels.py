@@ -118,9 +118,10 @@ def flavor_for_cookie_id(cookie_id: str):
     return FLAVOR_BY_ID.get(flavor_id)
 
 
-def build_labels_pdf(qty_by_cookie_id, title=None, extra_flavors=None):
-    """Build Avery 5163 sheets for the given cookie_id -> count map."""
+def build_labels_pdf(qty_by_cookie_id, title=None, extra_flavors=None, order_slips=None):
+    """Build Avery 5163 sheets: one packing slip per order, then cookie labels."""
     extra_flavors = extra_flavors or {}
+    order_slips = order_slips or []
     queue: list[dict] = []
     order = list(COOKIE_ID_TO_FLAVOR_ID.keys())
     for cookie_id in extra_flavors:
@@ -135,19 +136,25 @@ def build_labels_pdf(qty_by_cookie_id, title=None, extra_flavors=None):
         else:
             flavor = FLAVOR_BY_ID[COOKIE_ID_TO_FLAVOR_ID[cookie_id]]
         queue.extend([flavor] * qty)
-    if not queue:
+    if not queue and not order_slips:
         raise ValueError("No labels to print")
+
+    jobs: list[tuple[str, dict]] = [("order", slip) for slip in order_slips]
+    jobs.extend(("cookie", flavor) for flavor in queue)
 
     buf = BytesIO()
     c = new_canvas(buf, title or f"{BUSINESS_NAME} — labels")
-    for i, flavor in enumerate(queue):
+    for i, (kind, payload) in enumerate(jobs):
         if i and i % 10 == 0:
             c.showPage()
         slot = i % 10
         row, col = divmod(slot, 2)
         x = LEFT + col * H_PITCH
         y = PAGE_H - TOP - (row + 1) * V_PITCH
-        draw_label(c, x, y, flavor)
+        if kind == "order":
+            draw_order_label(c, x, y, payload)
+        else:
+            draw_label(c, x, y, payload)
     c.save()
     return buf.getvalue()
 
@@ -175,6 +182,55 @@ def draw_block(c, text, font, size, x, y, max_w, leading) -> float:
         c.drawString(x, y, line)
         y -= leading
     return y
+
+
+def draw_order_label(c: canvas.Canvas, x: float, y: float, slip: dict) -> None:
+    """4x2 packing label: logo, customer name, what they ordered."""
+    pad = 6
+    ix, iy = x + pad, y + pad
+    iw, ih = LABEL_W - 2 * pad, LABEL_H - 2 * pad
+
+    c.setStrokeColorRGB(0, 0, 0)
+    c.setLineWidth(0.3)
+    c.rect(x, y, LABEL_W, LABEL_H, stroke=1, fill=0)
+
+    logo_size = 36
+    logo_x, logo_y = ix, iy + ih - logo_size - 1
+    if LOGO.exists():
+        c.drawImage(
+            ImageReader(str(LOGO)),
+            logo_x,
+            logo_y,
+            width=logo_size,
+            height=logo_size,
+            mask="auto",
+            preserveAspectRatio=True,
+            anchor="c",
+        )
+
+    text_left = ix + logo_size + 6
+    text_w = ix + iw - text_left
+    c.setFillColorRGB(0, 0, 0)
+    py = iy + ih - 10
+    py = draw_block(c, BUSINESS_NAME.upper(), "Helvetica-Bold", 7.5, text_left, py, text_w, 9.5)
+    name = (slip.get("name") or "Customer").strip()
+    py = draw_block(c, name, "Helvetica-Bold", 11, text_left, py, text_w, 13)
+    meta_bits = [b for b in (
+        slip.get("order_number") or "",
+        slip.get("fulfillment") or "",
+        slip.get("when") or "",
+    ) if b]
+    if meta_bits:
+        py = draw_block(c, "  ·  ".join(meta_bits), "Helvetica", 6.5, text_left, py, text_w, 8.5)
+    py -= 2
+    c.setStrokeColorRGB(0, 0, 0)
+    c.setLineWidth(0.35)
+    c.line(ix, py + 4, ix + iw, py + 4)
+    py -= 2
+    for line in slip.get("lines") or []:
+        if py < iy + 8:
+            break
+        py = draw_block(c, line, "Helvetica", 7.2, ix, py, iw, 9)
 
 
 def draw_label(c: canvas.Canvas, x: float, y: float, flavor: dict) -> None:
