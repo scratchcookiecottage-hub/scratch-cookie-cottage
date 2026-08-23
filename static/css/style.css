@@ -970,21 +970,33 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  align-items: baseline;
+  gap: 0;
   padding: 0;
   margin: 0 0 36px;
+  color: var(--brown-soft);
+  cursor: default;
+  pointer-events: none;
 }
 
 .why-strip li {
-  background: #eef2ec;
-  color: var(--brown);
-  border: 1px solid var(--sage);
-  border-radius: 999px;
-  padding: 8px 16px;
-  font-weight: 700;
-  font-size: 0.88rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.02rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--brown-soft);
+}
+
+.why-strip li:not(:last-child)::after {
+  content: "·";
+  margin: 0 12px;
+  color: var(--caramel);
+  font-weight: 400;
 }
 
 .visually-hidden {
