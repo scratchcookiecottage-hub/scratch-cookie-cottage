@@ -116,10 +116,7 @@ def inject_globals():
             "@context": "https://schema.org",
             "@type": "Bakery",
             "name": "Scratch Cookie Cottage",
-            "description": (
-                "From Scratch. From the Cottage. Small-batch cookies "
-                "in Austin, Texas."
-            ),
+            "description": "Small-batch cookies in Austin, Texas.",
             "url": Config.PUBLIC_BASE_URL,
             "email": Config.CONTACT_EMAIL,
             "image": logo_url,

@@ -30,7 +30,7 @@ class PublicPagesTest(unittest.TestCase):
 
     def test_nav_and_tagline_on_home(self):
         html = self.client.get("/").get_data(as_text=True)
-        self.assertIn("From Scratch. From the Cottage.", html)
+        self.assertNotIn("From Scratch. From the Cottage.", html)
         self.assertIn("Order for This Weekend", html)
         self.assertIn("Our Story", html)
         self.assertIn("From Scratch", html)

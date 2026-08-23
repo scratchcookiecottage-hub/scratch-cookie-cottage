@@ -80,7 +80,6 @@ def try_resize_png() -> None:
 def write_readme() -> None:
     (OUT / "README.txt").write_text(
         f"""Scratch Cookie Cottage — logo & QR pack
-Tagline: From Scratch. From the Cottage.
 Palette: brown {BROWN} · cream {CREAM} · caramel #C68B59 · sage #A8B5A2 · charcoal #2C2C2C
 
 Files

@@ -90,7 +90,7 @@ class Config:
     DSHS_ID = os.getenv("DSHS_ID", "17384").strip()
     BUSINESS_LOCALITY = os.getenv("BUSINESS_LOCALITY", "West Lake Hills").strip()
     BUSINESS_REGION = os.getenv("BUSINESS_REGION", "TX").strip()
-    TAGLINE = "From Scratch. From the Cottage."
+    TAGLINE = ""
     PICKUP_NOTE = os.getenv(
         "PICKUP_NOTE",
         "Pickup is at our cottage. We’ll email you the address after you order.",

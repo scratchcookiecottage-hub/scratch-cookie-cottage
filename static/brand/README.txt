@@ -1,5 +1,4 @@
 Scratch Cookie Cottage — logo & QR pack
-Tagline: From Scratch. From the Cottage.
 Palette: brown #3D3229 · cream #FDF9F5 · caramel #C68B59 · sage #A8B5A2 · charcoal #2C2C2C
 
 Files

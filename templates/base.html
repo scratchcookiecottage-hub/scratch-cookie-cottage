@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ business_name }}{% endblock %}</title>
   {% block meta %}
-  <meta name="description" content="{{ tagline }} Small-batch cookies from Scratch Cookie Cottage in Austin, Texas. Order online for Friday or Saturday pickup.">
+  <meta name="description" content="Small-batch cookies from Scratch Cookie Cottage in Austin, Texas. Order online for Friday or Saturday pickup.">
   {% endblock %}
   <link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="{{ business_name }}">
   <meta property="og:title" content="{{ self.title() }}">
-  <meta property="og:description" content="{{ tagline }} Small-batch, from-scratch cookies in Austin, Texas.">
+  <meta property="og:description" content="Small-batch, from-scratch cookies in Austin, Texas.">
   <meta property="og:url" content="{{ public_base_url }}{{ request.path }}">
   <meta property="og:image" content="{{ og_image }}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ self.title() }}">
-  <meta name="twitter:description" content="{{ tagline }} Small-batch cookies in Austin, Texas.">
+  <meta name="twitter:description" content="Small-batch cookies in Austin, Texas.">
   <meta name="twitter:image" content="{{ og_image }}">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
@@ -65,7 +65,6 @@
 
     {% if request.endpoint and not request.endpoint.startswith('admin') %}
     <footer class="site-footer no-print">
-      <p class="footer-tagline">{{ tagline }}</p>
       <p class="footer-links">
         <a href="{{ url_for('order') }}">Order</a>
         <span aria-hidden="true">·</span>
@@ -85,7 +84,7 @@
         <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
       </p>
       <p class="footer-legal">{{ cottage_food_disclosure }}</p>
-      <p class="footer-legal">DSHS ID #{{ dshs_id }} · {{ business_name }} · {{ tagline }}</p>
+      <p class="footer-legal">DSHS ID #{{ dshs_id }} · {{ business_name }}</p>
     </footer>
     {% endif %}
   </div>

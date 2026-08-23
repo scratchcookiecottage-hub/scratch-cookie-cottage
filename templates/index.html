@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ business_name }} — {{ tagline }}{% endblock %}
+{% block title %}{{ business_name }}{% endblock %}
 {% block meta %}
-  <meta name="description" content="{{ tagline }} Handcrafted cookies in Austin, Texas. ${{ '%.2f'|format(price_individual / 100) }} each, or a build-your-own 6-pack for ${{ '%.2f'|format(price_six_pack / 100) }}. Order online for Friday or Saturday pickup.">
+  <meta name="description" content="Handcrafted cookies in Austin, Texas. ${{ '%.2f'|format(price_individual / 100) }} each, or a build-your-own 6-pack for ${{ '%.2f'|format(price_six_pack / 100) }}. Order online for Friday or Saturday pickup.">
 {% endblock %}
 {% block content %}
   <section class="hero">
@@ -12,7 +12,6 @@
       width="220"
       height="209"
     >
-    <p class="hero-tagline">{{ tagline }}</p>
     <p class="lead hero-lead">
       Small-batch cookies, mixed and baked in a cottage kitchen.
       Order anytime for Friday or Saturday pickup at our address.
