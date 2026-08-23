@@ -1,4 +1,7 @@
 (function () {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
   var roots = document.querySelectorAll("[data-rotate]");
   roots.forEach(function (root) {
     var frames = root.querySelectorAll("img");

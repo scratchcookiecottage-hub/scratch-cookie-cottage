@@ -28,6 +28,8 @@ Open:
 
 - Storefront: http://127.0.0.1:5000  
 - Order: http://127.0.0.1:5000/order  
+- Our Story: http://127.0.0.1:5000/story  
+- Markets: http://127.0.0.1:5000/markets  
 - Admin: http://127.0.0.1:5000/admin  
 - Merch: http://127.0.0.1:5000/merch  
 

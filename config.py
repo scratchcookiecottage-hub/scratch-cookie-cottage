@@ -84,6 +84,47 @@ class Config:
     PRINTIFY_API_TOKEN = os.getenv("PRINTIFY_API_TOKEN", "").strip()
     PRINTIFY_SHOP_ID = os.getenv("PRINTIFY_SHOP_ID", "").strip()
 
+    # Public brand / contact (no street address — Texas cottage food uses DSHS ID)
+    CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "scratchcookiecottage@gmail.com").strip()
+    INSTAGRAM_HANDLE = os.getenv("INSTAGRAM_HANDLE", "").strip().lstrip("@")
+    DSHS_ID = os.getenv("DSHS_ID", "17384").strip()
+    BUSINESS_LOCALITY = os.getenv("BUSINESS_LOCALITY", "West Lake Hills").strip()
+    BUSINESS_REGION = os.getenv("BUSINESS_REGION", "TX").strip()
+    TAGLINE = "From Scratch. From the Cottage."
+    PICKUP_NOTE = os.getenv(
+        "PICKUP_NOTE",
+        "We’ll confirm pickup details by email after you order.",
+    ).strip()
+    COTTAGE_FOOD_DISCLOSURE = (
+        "THIS PRODUCT WAS PRODUCED IN A PRIVATE RESIDENCE THAT IS NOT "
+        "SUBJECT TO GOVERNMENTAL LICENSING OR INSPECTION."
+    )
+
+    # Story page — replace paragraphs when the owner supplies the origin story.
+    STORY_HEADLINE = os.getenv(
+        "STORY_HEADLINE",
+        "Baked in a cottage kitchen, from scratch.",
+    ).strip()
+    STORY_PARAGRAPHS = [
+        "Scratch Cookie Cottage is a small-batch bakery in the Austin / West Lake Hills area. Every cookie is mixed, scooped, and baked from scratch — no mixes, no shortcuts.",
+        "We keep the menu focused: brown-butter chocolate chip, macadamia white chocolate, salted caramel chocolate pecan, and our savory-sweet White Miso Peanut Butter. When the season calls for it, a fifth cookie rotates through.",
+        "Order online anytime for Friday or Saturday pickup, or look for us at local farmers markets. Same-weekend boxes close after Wednesday 11:59 PM Central — after that, pick a future weekend and we’ll bake for you.",
+    ]
+    # Extra photos for /story. Paths relative to static/. Empty = use catalog cookie photos.
+    STORY_IMAGES = []
+
+    # Farmers markets shown on /markets. Leave empty until real dates are confirmed.
+    # Example entry:
+    # {
+    #     "name": "Example Farmers Market",
+    #     "area": "Austin, TX",
+    #     "when": "Saturdays, 9am–1pm",
+    #     "maps_url": "https://maps.google.com/?q=Example+Farmers+Market+Austin",
+    #     "notes": "Pre-order online, then pick up Friday or Saturday.",
+    #     "active": True,
+    # }
+    MARKETS = []
+
     DATABASE_PATH = os.getenv(
         "DATABASE_PATH",
         os.path.join(os.path.dirname(__file__), "data", "orders.db"),
@@ -143,6 +184,17 @@ class Config:
     @classmethod
     def printify_api_enabled(cls) -> bool:
         return bool(cls.PRINTIFY_API_TOKEN and cls.PRINTIFY_SHOP_ID)
+
+    @classmethod
+    def instagram_url(cls) -> str:
+        handle = cls.INSTAGRAM_HANDLE
+        if not handle:
+            return ""
+        return f"https://www.instagram.com/{handle}/"
+
+    @classmethod
+    def active_markets(cls) -> list:
+        return [m for m in (cls.MARKETS or []) if m.get("active")]
 
     @classmethod
     def cookie_catalog(cls) -> dict:

@@ -72,6 +72,15 @@
     if (packSumEl) {
       packSumEl.textContent = packTotal + " / 6 selected";
     }
+    const packStatus = document.getElementById("pack-status");
+    if (packStatus) {
+      packStatus.classList.remove("ok-box", "warn-box");
+      if (packTotal > 0 && packRemainder === 0) {
+        packStatus.classList.add("ok-box");
+      } else if (packTotal > 0) {
+        packStatus.classList.add("warn-box");
+      }
+    }
     if (packHintEl) {
       if (packTotal === 0) {
         packHintEl.textContent = "Add 6 cookies across flavors for one half-dozen box.";

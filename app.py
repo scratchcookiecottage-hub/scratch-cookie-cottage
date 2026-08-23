@@ -91,16 +91,47 @@ app.jinja_env.globals["printify_shop_url"] = Config.PRINTIFY_SHOP_URL
 def inject_globals():
     _, msg = window_status()
     sw = same_week_status()
+    og_image = Config.PUBLIC_BASE_URL + "/static/images/chocolate_chip.jpg"
+    logo_url = Config.PUBLIC_BASE_URL + "/static/images/logo.png"
     return {
         "order_open": True,  # cookies can be ordered anytime
         "window_message": msg,
         "same_week_open": sw["same_week_open"],
         "business_name": "Scratch Cookie Cottage",
+        "tagline": Config.TAGLINE,
         "catalog": store_catalog(),
         "price_individual": Config.PRICE_INDIVIDUAL_CENTS,
         "price_six_pack": Config.PRICE_SIX_PACK_CENTS,
         "delivery_min": Config.DELIVERY_MIN_CENTS,
         "delivery_zips": Config.DELIVERY_ZIPS,
+        "contact_email": Config.CONTACT_EMAIL,
+        "instagram_handle": Config.INSTAGRAM_HANDLE,
+        "instagram_url": Config.instagram_url(),
+        "pickup_note": Config.PICKUP_NOTE,
+        "dshs_id": Config.DSHS_ID,
+        "cottage_food_disclosure": Config.COTTAGE_FOOD_DISCLOSURE,
+        "public_base_url": Config.PUBLIC_BASE_URL,
+        "og_image": og_image,
+        "ld_json": {
+            "@context": "https://schema.org",
+            "@type": "Bakery",
+            "name": "Scratch Cookie Cottage",
+            "description": (
+                "From Scratch. From the Cottage. Small-batch cookies "
+                "in Austin, Texas."
+            ),
+            "url": Config.PUBLIC_BASE_URL,
+            "email": Config.CONTACT_EMAIL,
+            "image": logo_url,
+            "priceRange": "$",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": Config.BUSINESS_LOCALITY,
+                "addressRegion": Config.BUSINESS_REGION,
+                "addressCountry": "US",
+            },
+            "areaServed": {"@type": "City", "name": "Austin"},
+        },
     }
 
 
@@ -275,6 +306,39 @@ def api_seasonal():
             ],
         }
     )
+
+
+@app.route("/story")
+def story():
+    photos = list(Config.STORY_IMAGES or [])
+    if not photos:
+        for cookie in store_catalog().values():
+            src = cookie.get("img_default")
+            if src:
+                photos.append(
+                    {
+                        "src": src,
+                        "alt": cookie.get("name") or "Scratch Cookie Cottage cookie",
+                    }
+                )
+    else:
+        photos = [
+            p
+            if isinstance(p, dict)
+            else {"src": p, "alt": "Baking at Scratch Cookie Cottage"}
+            for p in photos
+        ]
+    return render_template(
+        "story.html",
+        headline=Config.STORY_HEADLINE,
+        paragraphs=Config.STORY_PARAGRAPHS,
+        photos=photos,
+    )
+
+
+@app.route("/markets")
+def markets():
+    return render_template("markets.html", markets=Config.active_markets())
 
 
 @app.route("/merch")

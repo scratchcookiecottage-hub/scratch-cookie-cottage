@@ -1,9 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Order — {{ business_name }}{% endblock %}
+{% block title %}Order Cookies — {{ business_name }}{% endblock %}
+{% block meta %}
+  <meta name="description" content="Build a 6-pack or add individual cookies. Order anytime for Friday or Saturday pickup. Weekly cutoff {{ cutoff_display() }} CST.">
+{% endblock %}
 {% block content %}
   <h1>Place Your Order</h1>
   <p class="lead">
-    Order anytime. Choose a Friday or Saturday for pickup on the calendar below.
+    Order anytime. Choose a Friday or Saturday on the calendar below.
   </p>
 
   <div class="banner {{ 'open' if same_week.same_week_open else 'closed' }}">
@@ -34,7 +37,17 @@
       {% for cookie_id, cookie in catalog.items() %}
       <div class="qty-row">
         <label for="pack_{{ cookie_id }}">
-          {{ cookie.name }}
+          {% if cookie.img_default %}
+          <img
+            class="qty-thumb"
+            src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}"
+            alt=""
+            width="48"
+            height="48"
+            aria-hidden="true"
+          >
+          {% endif %}
+          <span>{{ cookie.name }}</span>
         </label>
         <div class="stepper">
           <button type="button" class="step-btn" data-step="pack_{{ cookie_id }}" data-delta="-1" aria-label="Decrease">−</button>
@@ -51,8 +64,8 @@
         </div>
       </div>
       {% endfor %}
-      <div class="pack-status">
-        <strong id="pack-sum">0 / 6 selected</strong>
+      <div class="pack-status" id="pack-status">
+        <strong id="pack-sum" aria-live="polite">0 / 6 selected</strong>
         <span id="pack-hint" class="pack-hint">Add 6 cookies across flavors for one half-dozen box.</span>
       </div>
     </div>
@@ -64,8 +77,20 @@
       {% for cookie_id, cookie in catalog.items() %}
       <div class="qty-row">
         <label for="single_{{ cookie_id }}">
-          {{ cookie.name }}
-          <span class="meta">{{ price_individual | money }} each</span>
+          {% if cookie.img_default %}
+          <img
+            class="qty-thumb"
+            src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}"
+            alt=""
+            width="48"
+            height="48"
+            aria-hidden="true"
+          >
+          {% endif %}
+          <span>
+            {{ cookie.name }}
+            <span class="meta">{{ price_individual | money }} each</span>
+          </span>
         </label>
         <div class="stepper">
           <button type="button" class="step-btn" data-step="single_{{ cookie_id }}" data-delta="-1" aria-label="Decrease">−</button>
@@ -110,6 +135,7 @@
         Select a <strong>Friday</strong> or <strong>Saturday</strong>.
         Same-week dates lock after <strong>{{ cutoff_display() }} CST</strong> —
         those cells appear greyed out.
+        {% if pickup_note %} {{ pickup_note }}{% endif %}
       </p>
 
       <input type="hidden" name="pickup_date" id="pickup_date" value="{{ form.get('pickup_date', '') if form else '' }}">

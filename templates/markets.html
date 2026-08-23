@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Farmers Markets — {{ business_name }}{% endblock %}
+{% block meta %}
+  <meta name="description" content="Find Scratch Cookie Cottage at Austin-area farmers markets. Pre-order online for Friday or Saturday pickup.">
+{% endblock %}
+{% block content %}
+  <section class="hero hero-compact">
+    <p class="eyebrow">Farmers Markets</p>
+    <h1>See you at the market</h1>
+    <p class="lead">
+      We love a Saturday table: samples, boxes, and neighbors. Pre-order online
+      for Friday or Saturday pickup — then come say hello if we’re out that weekend.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="{{ url_for('order') }}">Pre-order online</a>
+    </div>
+  </section>
+
+  {% if markets %}
+    <h2 class="section-title">Upcoming markets</h2>
+    <div class="market-grid">
+      {% for market in markets %}
+      <article class="panel market-card">
+        <h3 class="script">{{ market.name }}</h3>
+        {% if market.when %}<p class="market-when">{{ market.when }}</p>{% endif %}
+        {% if market.area %}<p>{{ market.area }}</p>{% endif %}
+        {% if market.notes %}<p class="section-note" style="text-align:center;">{{ market.notes }}</p>{% endif %}
+        <div class="btn-row">
+          <a class="btn" href="{{ url_for('order') }}">Order for pickup</a>
+          {% if market.maps_url %}
+            <a class="btn secondary" href="{{ market.maps_url }}" target="_blank" rel="noopener">Directions</a>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="panel">
+      <h2>Market calendar</h2>
+      <p>
+        We’re lining up our farmers market calendar. Order cookies online anytime
+        for Friday or Saturday pickup, and check back here for dates and booth hours.
+      </p>
+      <p>
+        Want us at your market? <a href="{{ url_for('wholesale') }}">Send a note</a>
+        or email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+      </p>
+      <div class="btn-row">
+        <a class="btn" href="{{ url_for('order') }}">Order Cookies</a>
+        <a class="btn secondary" href="{{ url_for('story') }}">Our Story</a>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

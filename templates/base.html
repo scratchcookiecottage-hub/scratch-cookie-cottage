@@ -4,25 +4,52 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ business_name }}{% endblock %}</title>
+  {% block meta %}
+  <meta name="description" content="{{ tagline }} Small-batch cookies from Scratch Cookie Cottage in Austin, Texas. Order online for Friday or Saturday pickup.">
+  {% endblock %}
+  <link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ business_name }}">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ tagline }} Small-batch, from-scratch cookies in Austin, Texas.">
+  <meta property="og:url" content="{{ public_base_url }}{{ request.path }}">
+  <meta property="og:image" content="{{ og_image }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ self.title() }}">
+  <meta name="twitter:description" content="{{ tagline }} Small-batch cookies in Austin, Texas.">
+  <meta name="twitter:image" content="{{ og_image }}">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Pacifico&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script type="application/ld+json">{{ ld_json | tojson }}</script>
   {% block head %}{% endblock %}
 </head>
 <body>
-  <div class="wrap">
-    <header class="site-header no-print">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header no-print">
+    <div class="header-bar">
       <a class="logo" href="{{ url_for('index') }}">
         <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="{{ business_name }}">
       </a>
-      <nav class="nav">
-        <a href="{{ url_for('index') }}">Home</a>
-        <a href="{{ url_for('order') }}">Order Cookies</a>
-        <a href="{{ url_for('merch') }}">Merch</a>
+      <input type="checkbox" id="nav-check" class="nav-check" autocomplete="off">
+      <label for="nav-check" class="nav-burger" aria-controls="site-nav">
+        <span class="nav-burger-bars" aria-hidden="true"></span>
+        <span class="nav-burger-label">Menu</span>
+      </label>
+      <nav class="nav" id="site-nav">
+        <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}aria-current="page"{% endif %}>Home</a>
+        <a href="{{ url_for('order') }}" {% if request.endpoint in ('order', 'order_return', 'order_success') %}aria-current="page"{% endif %}>Order Cookies</a>
+        <a href="{{ url_for('story') }}" {% if request.endpoint == 'story' %}aria-current="page"{% endif %}>Our Story</a>
+        <a href="{{ url_for('markets') }}" {% if request.endpoint == 'markets' %}aria-current="page"{% endif %}>Markets</a>
+        <a href="{{ url_for('merch') }}" {% if request.endpoint == 'merch' %}aria-current="page"{% endif %}>Merch</a>
       </nav>
-    </header>
+    </div>
+  </header>
 
+  <div class="wrap">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul class="flash-list no-print">
@@ -33,13 +60,33 @@
       {% endif %}
     {% endwith %}
 
-    {% block content %}{% endblock %}
+    <main id="main">
+      {% block content %}{% endblock %}
+    </main>
 
-    {% if request.endpoint and not request.endpoint.startswith('admin') and request.endpoint != 'wholesale' %}
-    <p class="site-footer no-print">
-      Have questions about bulk, custom, or wholesale orders?
-      <a href="{{ url_for('wholesale') }}">Let us know here</a>.
-    </p>
+    {% if request.endpoint and not request.endpoint.startswith('admin') %}
+    <footer class="site-footer no-print">
+      <p class="footer-tagline">See you at the farmers market!</p>
+      <p class="footer-links">
+        <a href="{{ url_for('order') }}">Order</a>
+        <span aria-hidden="true">·</span>
+        <a href="{{ url_for('markets') }}">Markets</a>
+        <span aria-hidden="true">·</span>
+        <a href="{{ url_for('story') }}">Our Story</a>
+        <span aria-hidden="true">·</span>
+        <a href="{{ url_for('wholesale') }}">Wholesale</a>
+        {% if instagram_url %}
+          <span aria-hidden="true">·</span>
+          <a href="{{ instagram_url }}" target="_blank" rel="noopener">Instagram</a>
+        {% endif %}
+      </p>
+      <p>
+        <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+      </p>
+      <p class="footer-qr-note">Scan a booth QR to order or find this week’s markets.</p>
+      <p class="footer-legal">{{ cottage_food_disclosure }}</p>
+      <p class="footer-legal">DSHS ID #{{ dshs_id }} · {{ business_name }} · {{ tagline }}</p>
+    </footer>
     {% endif %}
   </div>
   <script src="{{ url_for('static', filename='js/seasonal-rotate.js') }}"></script>

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Our Story — {{ business_name }}{% endblock %}
+{% block meta %}
+  <meta name="description" content="{{ headline }} Small-batch, from-scratch cookies baked in a cottage kitchen in the Austin / West Lake Hills area.">
+{% endblock %}
+{% block content %}
+  <section class="hero hero-compact">
+    <p class="eyebrow">Our Story</p>
+    <h1>{{ headline }}</h1>
+    <p class="lead">{{ tagline }}</p>
+  </section>
+
+  <div class="story-layout">
+    <div class="panel story-copy">
+      {% for para in paragraphs %}
+        <p>{{ para }}</p>
+      {% endfor %}
+      <div class="btn-row" style="margin-top: 24px;">
+        <a class="btn" href="{{ url_for('order') }}">Order Cookies</a>
+        <a class="btn secondary" href="{{ url_for('markets') }}">Find Us at Markets</a>
+      </div>
+    </div>
+
+    {% if photos %}
+    <div class="story-photos">
+      {% for photo in photos %}
+        <figure class="story-photo">
+          <img
+            src="{% if photo.src.startswith('http') %}{{ photo.src }}{% else %}{{ url_for('static', filename=photo.src) }}{% endif %}"
+            alt="{{ photo.alt }}"
+            width="400"
+            height="280"
+            loading="lazy"
+          >
+        </figure>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+{% endblock %}
