@@ -43,7 +43,6 @@
         <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}aria-current="page"{% endif %}>Home</a>
         <a href="{{ url_for('order') }}" {% if request.endpoint in ('order', 'order_return', 'order_success') %}aria-current="page"{% endif %}>Order Cookies</a>
         <a href="{{ url_for('story') }}" {% if request.endpoint == 'story' %}aria-current="page"{% endif %}>Our Story</a>
-        <a href="{{ url_for('markets') }}" {% if request.endpoint == 'markets' %}aria-current="page"{% endif %}>Markets</a>
         <a href="{{ url_for('merch') }}" {% if request.endpoint == 'merch' %}aria-current="page"{% endif %}>Merch</a>
       </nav>
     </div>
@@ -66,15 +65,17 @@
 
     {% if request.endpoint and not request.endpoint.startswith('admin') %}
     <footer class="site-footer no-print">
-      <p class="footer-tagline">See you at the farmers market!</p>
+      <p class="footer-tagline">{{ tagline }}</p>
       <p class="footer-links">
         <a href="{{ url_for('order') }}">Order</a>
         <span aria-hidden="true">·</span>
-        <a href="{{ url_for('markets') }}">Markets</a>
-        <span aria-hidden="true">·</span>
         <a href="{{ url_for('story') }}">Our Story</a>
         <span aria-hidden="true">·</span>
+        <a href="{{ url_for('merch') }}">Merch</a>
+        <span aria-hidden="true">·</span>
         <a href="{{ url_for('wholesale') }}">Wholesale</a>
+        <span aria-hidden="true">·</span>
+        <a href="{{ url_for('markets') }}">Markets</a>
         {% if instagram_url %}
           <span aria-hidden="true">·</span>
           <a href="{{ instagram_url }}" target="_blank" rel="noopener">Instagram</a>
@@ -83,7 +84,6 @@
       <p>
         <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
       </p>
-      <p class="footer-qr-note">Scan a booth QR to order or find this week’s markets.</p>
       <p class="footer-legal">{{ cottage_food_disclosure }}</p>
       <p class="footer-legal">DSHS ID #{{ dshs_id }} · {{ business_name }} · {{ tagline }}</p>
     </footer>

@@ -32,21 +32,22 @@ class PublicPagesTest(unittest.TestCase):
         html = self.client.get("/").get_data(as_text=True)
         self.assertIn("From Scratch. From the Cottage.", html)
         self.assertIn("Order for This Weekend", html)
-        self.assertIn("Find Us at Markets", html)
         self.assertIn("Our Story", html)
-        self.assertIn("Markets", html)
         self.assertIn("From Scratch", html)
         self.assertIn("Small Batch", html)
         self.assertIn("Cottage Made", html)
         self.assertIn("DSHS ID #17384", html)
         self.assertIn("THIS PRODUCT WAS PRODUCED IN A PRIVATE RESIDENCE", html)
+        self.assertNotIn("Scan a booth QR", html)
+        self.assertNotIn("See you at the farmers market", html)
 
     def test_story_and_markets_pages(self):
         story = self.client.get("/story").get_data(as_text=True)
         self.assertIn("cottage kitchen", story.lower())
         markets = self.client.get("/markets").get_data(as_text=True)
-        self.assertIn("farmers market", markets.lower())
+        self.assertIn("cottage", markets.lower())
         self.assertIn("/order", markets)
+        self.assertNotIn("Scan a booth QR", markets)
 
     def test_order_form_fields_preserved(self):
         html = self.client.get("/order").get_data(as_text=True)

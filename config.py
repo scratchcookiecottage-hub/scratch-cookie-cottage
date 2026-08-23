@@ -93,7 +93,7 @@ class Config:
     TAGLINE = "From Scratch. From the Cottage."
     PICKUP_NOTE = os.getenv(
         "PICKUP_NOTE",
-        "We’ll confirm pickup details by email after you order.",
+        "Pickup is at our cottage. We’ll email you the address after you order.",
     ).strip()
     COTTAGE_FOOD_DISCLOSURE = (
         "THIS PRODUCT WAS PRODUCED IN A PRIVATE RESIDENCE THAT IS NOT "
@@ -108,7 +108,7 @@ class Config:
     STORY_PARAGRAPHS = [
         "Scratch Cookie Cottage is a small-batch bakery in the Austin / West Lake Hills area. Every cookie is mixed, scooped, and baked from scratch — no mixes, no shortcuts.",
         "We keep the menu focused: brown-butter chocolate chip, macadamia white chocolate, salted caramel chocolate pecan, and our savory-sweet White Miso Peanut Butter. When the season calls for it, a fifth cookie rotates through.",
-        "Order online anytime for Friday or Saturday pickup, or look for us at local farmers markets. Same-weekend boxes close after Wednesday 11:59 PM Central — after that, pick a future weekend and we’ll bake for you.",
+        "Order online anytime for Friday or Saturday pickup at our cottage. Same-weekend boxes close after Wednesday 11:59 PM Central — after that, pick a future weekend and we’ll bake for you.",
     ]
     # Extra photos for /story. Paths relative to static/. Empty = use catalog cookie photos.
     STORY_IMAGES = []

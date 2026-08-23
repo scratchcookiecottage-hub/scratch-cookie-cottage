@@ -1,23 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Farmers Markets — {{ business_name }}{% endblock %}
 {% block meta %}
-  <meta name="description" content="Find Scratch Cookie Cottage at Austin-area farmers markets. Pre-order online for Friday or Saturday pickup.">
+  <meta name="description" content="Order Scratch Cookie Cottage cookies anytime for Friday or Saturday pickup at our cottage. Sometimes you’ll also find us at a local farmers market.">
 {% endblock %}
 {% block content %}
   <section class="hero hero-compact">
     <p class="eyebrow">Farmers Markets</p>
-    <h1>See you at the market</h1>
+    <h1>Pickup is always at our cottage</h1>
     <p class="lead">
-      We love a Saturday table: samples, boxes, and neighbors. Pre-order online
-      for Friday or Saturday pickup — then come say hello if we’re out that weekend.
+      You can place an order any week for Friday or Saturday pickup from our address —
+      even if we skip the market. We’ll email you the pickup address after you order.
+      When we’re at a market, we’ll list it here.
     </p>
     <div class="btn-row">
-      <a class="btn" href="{{ url_for('order') }}">Pre-order online</a>
+      <a class="btn" href="{{ url_for('order') }}">Order for pickup</a>
     </div>
   </section>
 
   {% if markets %}
-    <h2 class="section-title">Upcoming markets</h2>
+    <h2 class="section-title">This season</h2>
     <div class="market-grid">
       {% for market in markets %}
       <article class="panel market-card">
@@ -26,7 +27,7 @@
         {% if market.area %}<p>{{ market.area }}</p>{% endif %}
         {% if market.notes %}<p class="section-note" style="text-align:center;">{{ market.notes }}</p>{% endif %}
         <div class="btn-row">
-          <a class="btn" href="{{ url_for('order') }}">Order for pickup</a>
+          <a class="btn" href="{{ url_for('order') }}">Order for cottage pickup</a>
           {% if market.maps_url %}
             <a class="btn secondary" href="{{ market.maps_url }}" target="_blank" rel="noopener">Directions</a>
           {% endif %}
@@ -36,14 +37,9 @@
     </div>
   {% else %}
     <div class="panel">
-      <h2>Market calendar</h2>
       <p>
-        We’re lining up our farmers market calendar. Order cookies online anytime
-        for Friday or Saturday pickup, and check back here for dates and booth hours.
-      </p>
-      <p>
-        Want us at your market? <a href="{{ url_for('wholesale') }}">Send a note</a>
-        or email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+        No market dates listed right now — and that’s okay. Order online for
+        Friday or Saturday pickup at our cottage any week.
       </p>
       <div class="btn-row">
         <a class="btn" href="{{ url_for('order') }}">Order Cookies</a>

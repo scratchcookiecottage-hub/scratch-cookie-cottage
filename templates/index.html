@@ -15,11 +15,11 @@
     <p class="hero-tagline">{{ tagline }}</p>
     <p class="lead hero-lead">
       Small-batch cookies, mixed and baked in a cottage kitchen.
-      Order anytime for Friday or Saturday pickup.
+      Order anytime for Friday or Saturday pickup at our address.
     </p>
     <div class="btn-row">
       <a class="btn" href="{{ url_for('order') }}">Order for This Weekend</a>
-      <a class="btn secondary" href="{{ url_for('markets') }}">Find Us at Markets</a>
+      <a class="btn secondary" href="{{ url_for('story') }}">Our Story</a>
     </div>
   </section>
 
@@ -93,7 +93,8 @@
     <h2>How Pre-Ordering Works</h2>
     <p>
       Order <strong>anytime</strong> and pick a <strong>Friday or Saturday</strong>
-      on the calendar. Card payment is due when you place the order — then we bake your box.
+      on the calendar. Pickup is at our cottage — we’ll email you the address
+      after you order. Card payment is due when you place the order, then we bake your box.
     </p>
     <p>
       Weekly bake cutoff is <strong>{{ cutoff_display() }} (CST)</strong>.
@@ -113,6 +114,5 @@
   <div class="btn-row">
     <a class="btn" href="{{ url_for('order') }}">Order Cookies</a>
     <a class="btn secondary" href="{{ url_for('merch') }}">Shop Merch</a>
-    <a class="btn secondary" href="{{ url_for('markets') }}">Markets</a>
   </div>
 {% endblock %}
