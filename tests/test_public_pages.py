@@ -60,6 +60,33 @@ class PublicPagesTest(unittest.TestCase):
         self.assertIn("id=\"pack-status\"", html)
 
 
+class AdminAppGateTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from app import app
+        from config import Config
+
+        cls._secret = Config.PUSH_REGISTER_SECRET
+        Config.PUSH_REGISTER_SECRET = "test-admin-gate"
+        app.config["TESTING"] = True
+        cls.client = app.test_client()
+
+    @classmethod
+    def tearDownClass(cls):
+        from config import Config
+
+        Config.PUSH_REGISTER_SECRET = cls._secret
+
+    def test_admin_hidden_without_app_key(self):
+        resp = self.client.get("/admin")
+        self.assertEqual(resp.status_code, 404)
+
+    def test_admin_login_with_header_sets_gate_cookie(self):
+        resp = self.client.get("/admin", headers={"X-SCC-App": "test-admin-gate"})
+        self.assertIn(resp.status_code, (200, 302))
+        self.assertTrue(resp.headers.get("Set-Cookie", "").startswith("scc_app="))
+
+
 class OrderLogicFreezeTest(unittest.TestCase):
     def test_six_pack_must_be_multiple_of_six(self):
         from app import build_line_items

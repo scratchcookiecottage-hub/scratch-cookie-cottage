@@ -6,7 +6,7 @@ import android.webkit.CookieManager
 object Prefs {
     private const val FILE = "scc_admin"
     private const val KEY_BASE_URL = "base_url"
-    const val DEFAULT_URL = "https://scratchcookiecottage.pythonanywhere.com"
+    const val DEFAULT_URL = "https://www.scratchcookiecottage.com"
     const val DEFAULT_PUSH_SECRET = "c3fd997f3ec7c56f0ca681e4d151cec6"
 
     fun baseUrl(context: Context): String {
@@ -15,7 +15,13 @@ object Prefs {
             .orEmpty()
             .trim()
             .trimEnd('/')
-        if (stored.isEmpty() || stored.contains("192.168.") || stored.contains("127.0.0.1")) {
+            .removeSuffix("/admin")
+        if (
+            stored.isEmpty() ||
+            stored.contains("192.168.") ||
+            stored.contains("127.0.0.1") ||
+            stored.contains("pythonanywhere.com")
+        ) {
             return DEFAULT_URL
         }
         return stored

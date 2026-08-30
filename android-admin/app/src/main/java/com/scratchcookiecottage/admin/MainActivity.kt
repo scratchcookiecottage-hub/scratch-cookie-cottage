@@ -158,7 +158,7 @@ class MainActivity : AppCompatActivity() {
                 view: WebView?,
                 request: WebResourceRequest?,
             ): Boolean {
-                // Keep print pages and admin links inside the app.
+                Prefs.writeAppGateCookie(this@MainActivity)
                 return false
             }
 
@@ -207,7 +207,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (Prefs.baseUrl(this).isNotEmpty() && binding.webView.url.isNullOrBlank()) {
+        val wanted = Prefs.adminUrl(this)
+        if (wanted.isEmpty()) return
+        val current = binding.webView.url.orEmpty()
+        val base = Prefs.baseUrl(this)
+        if (current.isBlank() || (base.isNotEmpty() && !current.startsWith(base))) {
             loadAdmin()
         }
     }
@@ -220,7 +224,12 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_refresh -> {
-                binding.webView.reload()
+                val current = binding.webView.url.orEmpty()
+                if (current.startsWith(Prefs.baseUrl(this))) {
+                    loadWithGate(current)
+                } else {
+                    loadAdmin()
+                }
                 true
             }
             R.id.action_admin_home -> {
@@ -251,8 +260,14 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
             return
         }
+        loadWithGate(url)
+    }
+
+    private fun loadWithGate(url: String) {
         Prefs.writeAppGateCookie(this)
         val headers = mapOf("X-SCC-App" to Prefs.pushSecret(this))
-        binding.webView.loadUrl(url, headers)
+        binding.webView.post {
+            binding.webView.loadUrl(url, headers)
+        }
     }
 }

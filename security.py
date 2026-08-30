@@ -113,4 +113,24 @@ def apply_security(app):
         resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         if https:
             resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        # WebView extra headers are dropped on redirects. Stamp the gate
+        # cookie on a successful app request so /admin -> /admin/login keeps access.
+        if (
+            request.path.startswith("/admin")
+            and resp.status_code < 400
+            and admin_app_ok()
+        ):
+            from config import Config
+
+            secret = Config.PUSH_REGISTER_SECRET
+            if secret:
+                resp.set_cookie(
+                    "scc_app",
+                    secret,
+                    max_age=60 * 60 * 24 * 400,
+                    path="/",
+                    secure=https,
+                    httponly=True,
+                    samesite="Lax",
+                )
         return resp
