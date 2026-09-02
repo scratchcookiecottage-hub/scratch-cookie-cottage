@@ -69,10 +69,10 @@ FLAVORS = [
     {
         "id": "white-miso-peanut-butter",
         "name": "White Miso Peanut Butter",
-        "contains": "Contains: Wheat, Eggs, Milk, Soy, Peanuts",
+        "contains": "Contains: Wheat, Eggs, Milk, Soy, Peanuts, Tree nuts (Almonds)",
         "ingredients": (
-            "Unbleached Flour, Peanut Butter, Butter, Sugar, Brown Sugar, "
-            "Eggs, White Miso, Vanilla, Honey, Salt."
+            "Unbleached Flour, Peanut Butter, Whole Peanuts, Butter, Sugar, "
+            "Brown Sugar, Eggs, White Miso, Vanilla, Honey, Almond Extract, Salt."
         ),
     },
 ]
