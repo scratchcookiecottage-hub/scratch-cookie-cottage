@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Blog — Admin{% endblock %}
+{% block content %}
+  <div class="btn-row" style="justify-content:flex-start; margin-bottom:20px;">
+    <a class="btn secondary" href="{{ url_for('admin_dashboard') }}">Back</a>
+    <a class="btn" href="{{ url_for('admin_blog_new') }}">Create a blog post</a>
+    <a class="btn secondary" href="{{ url_for('blog_index') }}" target="_blank" rel="noopener">View blog</a>
+  </div>
+
+  <h1>Blog</h1>
+  <p class="lead">Write a kitchen note, add photos, and publish it to the website. Drafts stay hidden until you publish.</p>
+
+  {% if posts %}
+  <ul class="blog-list">
+    {% for post in posts %}
+    <li>
+      <article class="blog-card">
+        {% if post.image %}
+        <a class="blog-card-photo" href="{{ url_for('admin_blog_edit', slug=post.slug) }}">
+          <img src="{{ post.image }}" alt="" width="400" height="240">
+        </a>
+        {% endif %}
+        <div class="blog-card-body">
+          <p class="blog-date">
+            {{ post.date.strftime("%B %d, %Y") }}
+            {% if post.draft %} · Draft{% else %} · Live{% endif %}
+          </p>
+          <h2><a href="{{ url_for('admin_blog_edit', slug=post.slug) }}">{{ post.title }}</a></h2>
+          {% if post.description %}
+          <p>{{ post.description }}</p>
+          {% endif %}
+          <a class="text-link" href="{{ url_for('admin_blog_edit', slug=post.slug) }}">Edit</a>
+          {% if not post.draft %}
+            <span aria-hidden="true"> · </span>
+            <a class="text-link" href="{{ url_for('blog_post', slug=post.slug) }}" target="_blank" rel="noopener">Open</a>
+          {% endif %}
+        </div>
+      </article>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="panel">
+    <p>No notes yet. Create the first one from the phone.</p>
+    <div class="btn-row">
+      <a class="btn" href="{{ url_for('admin_blog_new') }}">Create a blog post</a>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}

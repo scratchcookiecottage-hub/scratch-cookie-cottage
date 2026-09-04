@@ -99,6 +99,17 @@ class BlogLoaderTest(unittest.TestCase):
             self.assertIn("/static/images/blog/cookie.jpg", post["html"])
             self.assertTrue(post["image"].endswith("/static/images/blog/cookie.jpg"))
             self.assertEqual(blog.get_post("hello-cottage")["title"], "Hello cottage")
+            saved = blog.save_post(
+                title="Draft note",
+                slug="draft-note",
+                date_value="2026-09-05",
+                description="Hidden",
+                body="Not live yet",
+                draft=True,
+            )
+            self.assertTrue(saved["draft"])
+            self.assertIsNone(blog.get_post("draft-note"))
+            self.assertEqual(len(blog.list_posts(include_drafts=True)), 2)
         finally:
             blog.POSTS_DIR = old
 

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}{% if post %}Edit note{% else %}New blog post{% endif %} — Admin{% endblock %}
+{% block content %}
+  <div class="btn-row" style="justify-content:flex-start; margin-bottom:20px;">
+    <a class="btn secondary" href="{{ url_for('admin_blog') }}">All notes</a>
+    <a class="btn secondary" href="{{ url_for('admin_dashboard') }}">Orders</a>
+  </div>
+
+  <h1>{% if post %}Edit note{% else %}Create a blog post{% endif %}</h1>
+  <p class="lead">Title and a short description help Google. Photos can come from the camera or the gallery.</p>
+
+  <form method="post" enctype="multipart/form-data" class="panel" style="text-align:left; max-width:720px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="save">
+    <input type="hidden" name="existing_image" value="{{ post.image_name if post else '' }}">
+
+    <div class="field">
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" required value="{{ post.title if post else '' }}">
+    </div>
+
+    <div class="field">
+      <label for="description">SEO description</label>
+      <textarea id="description" name="description" rows="3" placeholder="One or two sentences for Google and social previews.">{{ post.description if post else '' }}</textarea>
+    </div>
+
+    <div class="field">
+      <label for="date">Date</label>
+      <input type="date" id="date" name="date" required value="{{ post.date.isoformat() if post else today }}">
+    </div>
+
+    <div class="field">
+      <label for="slug">Web address (optional)</label>
+      <input type="text" id="slug" name="slug" value="{{ post.slug if post else '' }}" placeholder="white-miso-peanut-butter" autocomplete="off">
+      <p class="section-note">Leave blank to build it from the title. After it is live, try not to change it.</p>
+    </div>
+
+    <div class="field">
+      <label>
+        <input type="checkbox" name="publish" value="1" {% if not post or not post.draft %}checked{% endif %}>
+        Publish on the website
+      </label>
+      <p class="section-note">Uncheck to save a draft only you can see in Admin.</p>
+    </div>
+
+    <h2 style="font-size:1.2rem; margin:24px 0 8px;">Hero photo</h2>
+    {% if post and post.image %}
+    <p class="section-note">Current hero:</p>
+    <img src="{{ post.image }}" alt="" style="max-width:100%; height:auto; border-radius:12px; margin-bottom:12px;">
+    {% endif %}
+    <div class="field">
+      <label for="hero">Hero photo</label>
+      <input type="file" id="hero" name="hero" accept="image/*">
+      <input id="hero-camera" name="hero" type="file" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;">
+      <div class="btn-row" style="justify-content:flex-start;margin:10px 0 0;">
+        <button type="button" class="btn secondary" id="pick-hero">Choose hero photo</button>
+        <button type="button" class="btn secondary" id="take-hero">Take hero photo</button>
+      </div>
+      <p class="section-note" id="hero-picked">Optional. This is the big picture at the top and the social preview.</p>
+    </div>
+
+    <h2 style="font-size:1.2rem; margin:24px 0 8px;">Note</h2>
+    <div class="field">
+      <label for="body">Write the note</label>
+      <textarea id="body" name="body" rows="12" placeholder="What you baked, why it matters, when to order…">{{ post.body if post else '' }}</textarea>
+      <p class="section-note">Plain sentences are fine. You can also use Markdown like **bold** and headings.</p>
+    </div>
+
+    <div class="field">
+      <label for="photos">More photos in the note</label>
+      <input type="file" id="photos" name="photos" accept="image/*" multiple>
+      <input id="photos-camera" name="photos" type="file" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;">
+      <div class="btn-row" style="justify-content:flex-start;margin:10px 0 0;">
+        <button type="button" class="btn secondary" id="pick-photos">Choose from gallery</button>
+        <button type="button" class="btn secondary" id="take-photo">Take photo</button>
+      </div>
+      <p class="section-note" id="photo-picked">These are added at the bottom of the note when you save.</p>
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-start; margin-top:20px;">
+      <button class="btn" type="submit">Save</button>
+      {% if post and not post.draft %}
+        <a class="btn secondary" href="{{ url_for('blog_post', slug=post.slug) }}" target="_blank" rel="noopener">View live</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if post %}
+  <form method="post" class="panel" style="text-align:left; max-width:720px;" onsubmit="return confirm('Delete this note?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="delete">
+    <button class="btn secondary" type="submit">Delete note</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  function wire(inputId, cameraId, pickId, takeId, statusId, label) {
+    var files = document.getElementById(inputId);
+    var camera = document.getElementById(cameraId);
+    var status = document.getElementById(statusId);
+    function show(input) {
+      if (!status || !input || !input.files || !input.files.length) return;
+      var names = [];
+      for (var i = 0; i < input.files.length; i++) names.push(input.files[i].name);
+      status.textContent = "Selected: " + names.join(", ") + " — tap Save.";
+    }
+    var pick = document.getElementById(pickId);
+    var take = document.getElementById(takeId);
+    if (pick && files) pick.addEventListener("click", function () { files.click(); });
+    if (take && camera) take.addEventListener("click", function () { camera.click(); });
+    if (files) files.addEventListener("change", function () { show(files); });
+    if (camera) camera.addEventListener("change", function () { show(camera); });
+  }
+  wire("hero", "hero-camera", "pick-hero", "take-hero", "hero-picked");
+  wire("photos", "photos-camera", "pick-photos", "take-photo", "photo-picked");
+})();
+</script>
+{% endblock %}

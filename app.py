@@ -18,7 +18,14 @@ from flask import (
     url_for,
 )
 
-from blog import get_post, list_posts
+from blog import (
+    append_images_to_body,
+    delete_post,
+    get_post,
+    list_posts,
+    save_images,
+    save_post,
+)
 from config import Config
 from db import (
     SEASONAL_ID,
@@ -1180,6 +1187,86 @@ def admin_factory():
         flavors=FACTORY_FLAVORS,
         drop_url=Config.FACTORY_DRIVE_DROP_URL,
         shots_url=Config.FACTORY_SHOTS_DOC_URL,
+    )
+
+
+def _admin_save_blog(previous_slug: str = ""):
+    title = (request.form.get("title") or "").strip()
+    slug = (request.form.get("slug") or "").strip()
+    description = (request.form.get("description") or "").strip()
+    body = request.form.get("body") or ""
+    date_value = (request.form.get("date") or "").strip()
+    draft = request.form.get("publish") != "1"
+    existing_image = (request.form.get("existing_image") or "").strip()
+    hero_files = request.files.getlist("hero")
+    extra_files = request.files.getlist("photos")
+    hero_names = save_images(hero_files)
+    extra_names = save_images(extra_files)
+    image = hero_names[0] if hero_names else existing_image
+    if extra_names:
+        body = append_images_to_body(body, extra_names)
+    try:
+        post = save_post(
+            title=title,
+            slug=slug,
+            date_value=date_value,
+            description=description,
+            body=body,
+            image=image,
+            draft=draft,
+            previous_slug=previous_slug,
+        )
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return None
+    if draft:
+        flash("Draft saved. It is hidden from the public blog.", "ok")
+    else:
+        flash("Blog note is live at /blog/" + post["slug"], "ok")
+    return post
+
+
+@app.route("/admin/blog")
+@admin_required
+def admin_blog():
+    return render_template("admin/blog.html", posts=list_posts(include_drafts=True))
+
+
+@app.route("/admin/blog/new", methods=["GET", "POST"])
+@admin_required
+def admin_blog_new():
+    if request.method == "POST":
+        post = _admin_save_blog()
+        if post:
+            return redirect(url_for("admin_blog_edit", slug=post["slug"]))
+    return render_template(
+        "admin/blog_edit.html",
+        post=None,
+        today=date.today().isoformat(),
+    )
+
+
+@app.route("/admin/blog/<slug>", methods=["GET", "POST"])
+@admin_required
+def admin_blog_edit(slug):
+    post = get_post(slug, include_drafts=True)
+    if not post:
+        flash("That note was not found.", "error")
+        return redirect(url_for("admin_blog"))
+    if request.method == "POST":
+        action = request.form.get("action") or "save"
+        if action == "delete":
+            delete_post(slug)
+            flash("Note deleted.", "ok")
+            return redirect(url_for("admin_blog"))
+        saved = _admin_save_blog(previous_slug=post["slug"])
+        if saved:
+            return redirect(url_for("admin_blog_edit", slug=saved["slug"]))
+        post = get_post(slug, include_drafts=True) or post
+    return render_template(
+        "admin/blog_edit.html",
+        post=post,
+        today=date.today().isoformat(),
     )
 
 
