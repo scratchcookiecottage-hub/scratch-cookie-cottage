@@ -7,6 +7,7 @@ from io import BytesIO
 import stripe
 from flask import (
     Flask,
+    Response,
     flash,
     jsonify,
     redirect,
@@ -17,6 +18,7 @@ from flask import (
     url_for,
 )
 
+from blog import get_post, list_posts
 from config import Config
 from db import (
     SEASONAL_ID,
@@ -331,6 +333,78 @@ def story():
         paragraphs=Config.STORY_PARAGRAPHS,
         photos=photos,
     )
+
+
+@app.route("/blog")
+def blog_index():
+    return render_template("blog/index.html", posts=list_posts())
+
+
+@app.route("/blog/<slug>")
+def blog_post(slug):
+    post = get_post(slug)
+    if not post:
+        return render_template("blog/missing.html"), 404
+    og = post["image"]
+    if og and og.startswith("/"):
+        og = Config.PUBLIC_BASE_URL.rstrip("/") + og
+    article_ld = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": post["title"],
+        "datePublished": post["date"].isoformat(),
+        "description": post["description"] or post["title"],
+        "author": {"@type": "Organization", "name": "Scratch Cookie Cottage"},
+        "publisher": {"@type": "Organization", "name": "Scratch Cookie Cottage"},
+        "mainEntityOfPage": f"{Config.PUBLIC_BASE_URL}/blog/{post['slug']}",
+    }
+    if og:
+        article_ld["image"] = og
+    kwargs = {"post": post, "article_ld": article_ld}
+    if og:
+        kwargs["og_image"] = og
+    return render_template("blog/post.html", **kwargs)
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    base = Config.PUBLIC_BASE_URL.rstrip("/")
+    urls = [
+        "/",
+        "/order",
+        "/story",
+        "/blog",
+        "/merch",
+        "/markets",
+        "/wholesale",
+    ]
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    for path in urls:
+        lines.append("  <url>")
+        lines.append(f"    <loc>{base}{path}</loc>")
+        lines.append("  </url>")
+    for post in list_posts():
+        lines.append("  <url>")
+        lines.append(f"    <loc>{base}/blog/{post['slug']}</loc>")
+        lines.append(f"    <lastmod>{post['date'].isoformat()}</lastmod>")
+        lines.append("  </url>")
+    lines.append("</urlset>")
+    return Response("\n".join(lines) + "\n", mimetype="application/xml")
+
+
+@app.route("/robots.txt")
+def robots():
+    base = Config.PUBLIC_BASE_URL.rstrip("/")
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        f"Sitemap: {base}/sitemap.xml\n"
+    )
+    return Response(body, mimetype="text/plain")
 
 
 @app.route("/markets")

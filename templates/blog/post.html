@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} — {{ business_name }}{% endblock %}
+{% block meta %}
+  <meta name="description" content="{{ post.description or post.title }}">
+{% endblock %}
+{% block og %}
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="{{ business_name }}">
+  <meta property="og:title" content="{{ post.title }}">
+  <meta property="og:description" content="{{ post.description or post.title }}">
+  <meta property="og:url" content="{{ public_base_url }}{{ request.path }}">
+  <meta property="og:image" content="{{ og_image }}">
+  <meta property="article:published_time" content="{{ post.date.isoformat() }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ post.title }}">
+  <meta name="twitter:description" content="{{ post.description or post.title }}">
+  <meta name="twitter:image" content="{{ og_image }}">
+{% endblock %}
+{% block head %}
+  <script type="application/ld+json">{{ article_ld | tojson }}</script>
+{% endblock %}
+{% block content %}
+  <article class="blog-post">
+    <p class="eyebrow"><a href="{{ url_for('blog_index') }}">Blog</a></p>
+    <h1>{{ post.title }}</h1>
+    <p class="blog-date">{{ post.date.strftime("%B %d, %Y") }}</p>
+    {% if post.image %}
+    <figure class="blog-hero">
+      <img src="{{ post.image }}" alt="{{ post.title }}" width="800" height="480">
+    </figure>
+    {% endif %}
+    <div class="blog-body">
+      {{ post.html | safe }}
+    </div>
+    <div class="btn-row" style="margin-top: 32px;">
+      <a class="btn" href="{{ url_for('order') }}">Order Cookies</a>
+      <a class="btn secondary" href="{{ url_for('blog_index') }}">More notes</a>
+    </div>
+  </article>
+{% endblock %}

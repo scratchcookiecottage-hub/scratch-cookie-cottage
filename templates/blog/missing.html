@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Note not found — {{ business_name }}{% endblock %}
+{% block content %}
+  <section class="hero hero-compact">
+    <h1>That note is not here</h1>
+    <p class="lead">It may have moved. See the rest of the cottage kitchen notes, or order cookies for the weekend.</p>
+    <div class="btn-row">
+      <a class="btn" href="{{ url_for('blog_index') }}">Blog</a>
+      <a class="btn secondary" href="{{ url_for('order') }}">Order Cookies</a>
+    </div>
+  </section>
+{% endblock %}

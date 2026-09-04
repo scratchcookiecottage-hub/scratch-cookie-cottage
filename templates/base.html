@@ -8,6 +8,7 @@
   <meta name="description" content="Small-batch cookies from Scratch Cookie Cottage in Austin, Texas. Order online for Friday or Saturday pickup.">
   {% endblock %}
   <link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
+  {% block og %}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="{{ business_name }}">
   <meta property="og:title" content="{{ self.title() }}">
@@ -18,6 +19,7 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="Small-batch cookies in Austin, Texas.">
   <meta name="twitter:image" content="{{ og_image }}">
+  {% endblock %}
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,6 +45,7 @@
         <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}aria-current="page"{% endif %}>Home</a>
         <a href="{{ url_for('order') }}" {% if request.endpoint in ('order', 'order_return', 'order_success') %}aria-current="page"{% endif %}>Order Cookies</a>
         <a href="{{ url_for('story') }}" {% if request.endpoint == 'story' %}aria-current="page"{% endif %}>Our Story</a>
+        <a href="{{ url_for('blog_index') }}" {% if request.endpoint in ('blog_index', 'blog_post') %}aria-current="page"{% endif %}>Blog</a>
         <a href="{{ url_for('merch') }}" {% if request.endpoint == 'merch' %}aria-current="page"{% endif %}>Merch</a>
       </nav>
     </div>
@@ -69,6 +72,8 @@
         <a href="{{ url_for('order') }}">Order</a>
         <span aria-hidden="true">·</span>
         <a href="{{ url_for('story') }}">Our Story</a>
+        <span aria-hidden="true">·</span>
+        <a href="{{ url_for('blog_index') }}">Blog</a>
         <span aria-hidden="true">·</span>
         <a href="{{ url_for('merch') }}">Merch</a>
         <span aria-hidden="true">·</span>

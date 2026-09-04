@@ -23,10 +23,17 @@ class PublicPagesTest(unittest.TestCase):
         cls.client = app.test_client()
 
     def test_public_gets_ok(self):
-        for path in ("/", "/order", "/story", "/markets", "/merch", "/wholesale"):
+        for path in ("/", "/order", "/story", "/blog", "/markets", "/merch", "/wholesale"):
             with self.subTest(path=path):
                 resp = self.client.get(path)
                 self.assertEqual(resp.status_code, 200, path)
+        self.assertEqual(self.client.get("/blog/not-a-real-note").status_code, 404)
+        robots = self.client.get("/robots.txt")
+        self.assertEqual(robots.status_code, 200)
+        self.assertIn(b"Sitemap:", robots.data)
+        sitemap = self.client.get("/sitemap.xml")
+        self.assertEqual(sitemap.status_code, 200)
+        self.assertIn(b"/blog", sitemap.data)
 
     def test_nav_and_tagline_on_home(self):
         html = self.client.get("/").get_data(as_text=True)
@@ -58,6 +65,42 @@ class PublicPagesTest(unittest.TestCase):
         self.assertIn('name="fulfillment"', html)
         self.assertIn("qty-thumb", html)
         self.assertIn("id=\"pack-status\"", html)
+
+
+class BlogLoaderTest(unittest.TestCase):
+    def test_markdown_post_and_images(self):
+        import tempfile
+        from pathlib import Path
+
+        import blog
+
+        tmp = Path(tempfile.mkdtemp())
+        (tmp / "hello.md").write_text(
+            "---\n"
+            "title: Hello cottage\n"
+            "slug: hello-cottage\n"
+            "date: 2026-09-04\n"
+            "description: A test kitchen note\n"
+            "image: cookie.jpg\n"
+            "draft: false\n"
+            "---\n\n"
+            "Hello **cottage**.\n\n"
+            "![A cookie](cookie.jpg)\n",
+            encoding="utf-8",
+        )
+        old = blog.POSTS_DIR
+        blog.POSTS_DIR = tmp
+        try:
+            posts = blog.list_posts()
+            self.assertEqual(len(posts), 1)
+            post = posts[0]
+            self.assertEqual(post["slug"], "hello-cottage")
+            self.assertIn("<strong>cottage</strong>", post["html"])
+            self.assertIn("/static/images/blog/cookie.jpg", post["html"])
+            self.assertTrue(post["image"].endswith("/static/images/blog/cookie.jpg"))
+            self.assertEqual(blog.get_post("hello-cottage")["title"], "Hello cottage")
+        finally:
+            blog.POSTS_DIR = old
 
 
 class AdminAppGateTest(unittest.TestCase):
