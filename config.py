@@ -144,11 +144,11 @@ class Config:
     ).strip()
     FACTORY_SHOTS_DOC_ID = os.getenv(
         "FACTORY_SHOTS_DOC_ID",
-        "1QbKiuTuagaNv37k0xSvkWJdsfuP-0iFcXnhRkteI8ec",
+        "1OrB2p3p2OdTih9LBm80MdNOscDEkgrX-Xry-bP8OCdY",
     ).strip()
     FACTORY_SHOTS_DOC_URL = os.getenv(
         "FACTORY_SHOTS_DOC_URL",
-        "https://docs.google.com/document/d/1QbKiuTuagaNv37k0xSvkWJdsfuP-0iFcXnhRkteI8ec/edit",
+        "https://docs.google.com/document/d/1OrB2p3p2OdTih9LBm80MdNOscDEkgrX-Xry-bP8OCdY/edit",
     ).strip()
     GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "").strip()
     GOOGLE_SERVICE_ACCOUNT_JSON = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()

@@ -1125,6 +1125,7 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
   width: 100%;
   height: 220px;
   object-fit: cover;
+  object-position: center;
   display: block;
 }
 
@@ -1164,7 +1165,11 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
 .blog-hero img {
   width: 100%;
   height: auto;
+  max-height: min(70vh, 720px);
+  object-fit: contain;
+  object-position: center;
   display: block;
+  background: #f7f1e8;
 }
 .blog-body {
   font-size: 1.08rem;
@@ -1179,10 +1184,12 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
 }
 .blog-body img {
   max-width: 100%;
+  width: auto;
   height: auto;
   border-radius: 14px;
-  margin: 8px 0 18px;
+  margin: 8px auto 18px;
   display: block;
+  object-fit: contain;
 }
 .blog-body a { font-weight: 700; }
 
@@ -1191,5 +1198,5 @@ h3.script { font-size: 1.45rem; margin: 0 0 10px; }
     grid-template-columns: 240px 1fr;
     align-items: stretch;
   }
-  .blog-card-photo img { height: 100%; min-height: 180px; }
+  .blog-card-photo img { height: 100%; min-height: 180px; object-fit: cover; object-position: center; }
 }
