@@ -114,6 +114,71 @@ class BlogLoaderTest(unittest.TestCase):
             blog.POSTS_DIR = old
 
 
+class LivePythonAnywhereBlogSyncTest(unittest.TestCase):
+    """Lock the posts/images/stretch fix that are live on www.scratchcookiecottage.com."""
+
+    LIVE_SLUGS = {
+        "what-does-miso-do-in-cookies",
+        "cookie-gift-box-austin",
+        "fresh-cookie-delivery-austin",
+        "corporate-cookies-austin",
+    }
+    LIVE_IMAGES = {
+        "white-miso-peanut-butter-cookie-austin.jpg",
+        "cottage-kitchen-mise-en-place.jpg",
+        "austin-cookie-gift-box-macadamia.jpg",
+        "fresh-cookie-delivery-austin.jpg",
+        "corporate-cookies-austin.jpg",
+    }
+    SHOTS_DOC_ID = "1OrB2p3p2OdTih9LBm80MdNOscDEkgrX-Xry-bP8OCdY"
+
+    def test_only_the_four_live_posts_are_published(self):
+        import blog
+
+        posts = blog.list_posts()
+        self.assertEqual({post["slug"] for post in posts}, self.LIVE_SLUGS)
+        for post in posts:
+            self.assertFalse(post["draft"], post["slug"])
+            self.assertEqual(post["date"].isoformat(), "2026-09-04")
+        for missing in (
+            "small-batch",
+            "sweet-and-salty",
+            "texture-guide",
+        ):
+            self.assertIsNone(blog.get_post(missing))
+
+    def test_live_blog_images_are_present(self):
+        for name in self.LIVE_IMAGES:
+            path = ROOT / "static" / "images" / "blog" / name
+            self.assertTrue(path.is_file(), name)
+            self.assertGreater(path.stat().st_size, 0, name)
+
+    def test_blog_templates_do_not_force_hero_size(self):
+        post = (ROOT / "templates" / "blog" / "post.html").read_text(encoding="utf-8")
+        index = (ROOT / "templates" / "blog" / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn('width="800"', post)
+        self.assertNotIn('height="480"', post)
+        self.assertNotIn('width="400"', index)
+        self.assertNotIn('height="240"', index)
+        self.assertIn('<img src="{{ post.image }}" alt="{{ post.title }}">', post)
+        self.assertIn('<img src="{{ post.image }}" alt="">', index)
+
+    def test_blog_css_keeps_natural_hero_aspect(self):
+        css = (ROOT / "static" / "css" / "style.css").read_text(encoding="utf-8")
+        self.assertIn("object-fit: contain;", css)
+        self.assertIn("max-height: min(70vh, 720px);", css)
+        self.assertIn(".blog-card-photo img { height: 100%; min-height: 180px; object-fit: cover;", css)
+
+    def test_factory_shots_doc_defaults_to_live_id(self):
+        config_src = (ROOT / "config.py").read_text(encoding="utf-8")
+        example = (ROOT / ".env.example").read_text(encoding="utf-8")
+        self.assertIn(self.SHOTS_DOC_ID, config_src)
+        self.assertNotIn("1QbKiuTuagaNv37k0xSvkWJdsfuP-0iFcXnhRkteI8ec", config_src)
+        self.assertIn(f"FACTORY_SHOTS_DOC_ID={self.SHOTS_DOC_ID}", example)
+        self.assertIn(self.SHOTS_DOC_ID, example)
+        self.assertNotIn("1QbKiuTuagaNv37k0xSvkWJdsfuP-0iFcXnhRkteI8ec", example)
+
+
 class AdminAppGateTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
