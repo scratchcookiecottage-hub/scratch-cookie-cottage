@@ -102,6 +102,28 @@ def inject_globals():
     sw = same_week_status()
     og_image = Config.PUBLIC_BASE_URL + "/static/images/chocolate_chip.jpg"
     logo_url = Config.PUBLIC_BASE_URL + "/static/images/logo.png"
+    instagram_url = Config.instagram_url()
+    facebook_url = Config.facebook_url()
+    ld_json = {
+        "@context": "https://schema.org",
+        "@type": "Bakery",
+        "name": "Scratch Cookie Cottage",
+        "description": "Small-batch cookies in Austin, Texas.",
+        "url": Config.PUBLIC_BASE_URL,
+        "email": Config.CONTACT_EMAIL,
+        "image": logo_url,
+        "priceRange": "$",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": Config.BUSINESS_LOCALITY,
+            "addressRegion": Config.BUSINESS_REGION,
+            "addressCountry": "US",
+        },
+        "areaServed": {"@type": "City", "name": "Austin"},
+    }
+    same_as = [url for url in (instagram_url, facebook_url) if url]
+    if same_as:
+        ld_json["sameAs"] = same_as
     return {
         "order_open": True,  # cookies can be ordered anytime
         "window_message": msg,
@@ -115,29 +137,14 @@ def inject_globals():
         "delivery_zips": Config.DELIVERY_ZIPS,
         "contact_email": Config.CONTACT_EMAIL,
         "instagram_handle": Config.INSTAGRAM_HANDLE,
-        "instagram_url": Config.instagram_url(),
+        "instagram_url": instagram_url,
+        "facebook_url": facebook_url,
         "pickup_note": Config.PICKUP_NOTE,
         "dshs_id": Config.DSHS_ID,
         "cottage_food_disclosure": Config.COTTAGE_FOOD_DISCLOSURE,
         "public_base_url": Config.PUBLIC_BASE_URL,
         "og_image": og_image,
-        "ld_json": {
-            "@context": "https://schema.org",
-            "@type": "Bakery",
-            "name": "Scratch Cookie Cottage",
-            "description": "Small-batch cookies in Austin, Texas.",
-            "url": Config.PUBLIC_BASE_URL,
-            "email": Config.CONTACT_EMAIL,
-            "image": logo_url,
-            "priceRange": "$",
-            "address": {
-                "@type": "PostalAddress",
-                "addressLocality": Config.BUSINESS_LOCALITY,
-                "addressRegion": Config.BUSINESS_REGION,
-                "addressCountry": "US",
-            },
-            "areaServed": {"@type": "City", "name": "Austin"},
-        },
+        "ld_json": ld_json,
     }
 
 

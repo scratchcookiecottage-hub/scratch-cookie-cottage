@@ -46,8 +46,39 @@ class PublicPagesTest(unittest.TestCase):
         self.assertNotIn("Cottage Made", html)
         self.assertIn("DSHS ID #17384", html)
         self.assertIn("THIS PRODUCT WAS PRODUCED IN A PRIVATE RESIDENCE", html)
+        self.assertIn('href="https://www.facebook.com/ScratchCookieCottage"', html)
+        self.assertIn(">Facebook</a>", html)
+        self.assertIn('rel="noopener noreferrer"', html)
+        self.assertIn('"sameAs"', html)
+        self.assertIn("https://www.facebook.com/ScratchCookieCottage", html)
+        from config import Config
+
+        if not Config.INSTAGRAM_HANDLE:
+            self.assertNotIn(">Instagram</a>", html)
         self.assertNotIn("Scan a booth QR", html)
         self.assertNotIn("See you at the farmers market", html)
+
+    def test_facebook_url_helpers(self):
+        from config import Config
+
+        self.assertEqual(
+            Config.facebook_url(),
+            "https://www.facebook.com/ScratchCookieCottage",
+        )
+        old_url, old_page = Config.FACEBOOK_URL, Config.FACEBOOK_PAGE
+        try:
+            Config.FACEBOOK_URL = "https://www.facebook.com/CustomPage/"
+            Config.FACEBOOK_PAGE = "IgnoredWhenUrlSet"
+            self.assertEqual(Config.facebook_url(), "https://www.facebook.com/CustomPage")
+            Config.FACEBOOK_URL = ""
+            Config.FACEBOOK_PAGE = "ScratchCookieCottage"
+            self.assertEqual(
+                Config.facebook_url(),
+                "https://www.facebook.com/ScratchCookieCottage",
+            )
+        finally:
+            Config.FACEBOOK_URL = old_url
+            Config.FACEBOOK_PAGE = old_page
 
     def test_story_and_markets_pages(self):
         story = self.client.get("/story").get_data(as_text=True)

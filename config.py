@@ -87,6 +87,10 @@ class Config:
     # Public brand / contact (no street address — Texas cottage food uses DSHS ID)
     CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "scratchcookiecottage@gmail.com").strip()
     INSTAGRAM_HANDLE = os.getenv("INSTAGRAM_HANDLE", "").strip().lstrip("@")
+    # Full URL wins; FACEBOOK_PAGE accepts a slug or URL. Default shows without .env.
+    FACEBOOK_URL = os.getenv("FACEBOOK_URL", "").strip()
+    FACEBOOK_PAGE = os.getenv("FACEBOOK_PAGE", "").strip().lstrip("@").lstrip("/")
+    FACEBOOK_DEFAULT_URL = "https://www.facebook.com/ScratchCookieCottage"
     DSHS_ID = os.getenv("DSHS_ID", "17384").strip()
     BUSINESS_LOCALITY = os.getenv("BUSINESS_LOCALITY", "West Lake Hills").strip()
     BUSINESS_REGION = os.getenv("BUSINESS_REGION", "TX").strip()
@@ -191,6 +195,16 @@ class Config:
         if not handle:
             return ""
         return f"https://www.instagram.com/{handle}/"
+
+    @classmethod
+    def facebook_url(cls) -> str:
+        raw = cls.FACEBOOK_URL or cls.FACEBOOK_PAGE or cls.FACEBOOK_DEFAULT_URL
+        raw = (raw or "").strip()
+        if not raw:
+            return ""
+        if raw.startswith(("http://", "https://")):
+            return raw.rstrip("/")
+        return f"https://www.facebook.com/{raw.lstrip('@').lstrip('/')}"
 
     @classmethod
     def active_markets(cls) -> list:
