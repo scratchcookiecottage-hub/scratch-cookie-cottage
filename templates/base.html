@@ -84,6 +84,10 @@
           <span aria-hidden="true">·</span>
           <a href="{{ instagram_url }}" target="_blank" rel="noopener">Instagram</a>
         {% endif %}
+        {% if facebook_url %}
+          <span aria-hidden="true">·</span>
+          <a href="{{ facebook_url }}" target="_blank" rel="noopener noreferrer">Facebook</a>
+        {% endif %}
       </p>
       <p>
         <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
