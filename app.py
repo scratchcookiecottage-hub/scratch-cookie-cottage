@@ -31,6 +31,7 @@ from db import (
     SEASONAL_ID,
     add_seasonal_image,
     aggregate_cookie_counts,
+    aggregate_minis_counts,
     aggregate_product_summary,
     create_order,
     delete_seasonal_image,
@@ -111,6 +112,9 @@ def inject_globals():
         "catalog": store_catalog(),
         "price_individual": Config.PRICE_INDIVIDUAL_CENTS,
         "price_six_pack": Config.PRICE_SIX_PACK_CENTS,
+        "price_minis_pack": Config.PRICE_MINIS_PACK_CENTS,
+        "minis_per_pack": Config.MINIS_PER_PACK,
+        "show_minis_photos": Config.SHOW_MINIS_PHOTOS,
         "delivery_min": Config.DELIVERY_MIN_CENTS,
         "delivery_zips": Config.DELIVERY_ZIPS,
         "contact_email": Config.CONTACT_EMAIL,
@@ -171,13 +175,19 @@ def parse_qty_form(prefix: str) -> dict[str, int]:
 
 
 def build_line_items(
-    singles: dict[str, int], pack: dict[str, int]
+    singles: dict[str, int],
+    pack: dict[str, int],
+    minis: dict[str, int] | None = None,
 ) -> tuple[list[dict], int, list[str]]:
     """
-    Build order line items from individual cookies and a build-your-own 6-pack mix.
+    Build order line items from individual cookies, a build-your-own 6-pack mix,
+    and single-flavor minis packs.
 
     Pack rules: total cookies across flavors must be 0 or a multiple of 6.
-    Each complete set of 6 cookies = one $20 six-pack.
+    Each complete set of 6 cookies = one six-pack at PRICE_SIX_PACK_CENTS.
+
+    Minis: one flavor per pack (no mixing). Each pack is MINIS_PER_PACK mini
+    cookies at PRICE_MINIS_PACK_CENTS. Quantity is the number of packs.
 
     Returns (lines, subtotal_cents, errors).
     """
@@ -185,6 +195,7 @@ def build_line_items(
     errors: list[str] = []
     lines: list[dict] = []
     subtotal = 0
+    minis = minis or {}
 
     pack_total = sum(pack.values())
     if pack_total > 0 and pack_total % 6 != 0:
@@ -194,8 +205,11 @@ def build_line_items(
         )
 
     single_total = sum(singles.values())
-    if single_total == 0 and pack_total == 0:
-        errors.append("Please add individual cookies and/or build a 6-pack.")
+    minis_total = sum(qty for qty in minis.values() if qty > 0)
+    if single_total == 0 and pack_total == 0 and minis_total == 0:
+        errors.append(
+            "Please add individual cookies, a 6-pack, and/or a minis pack."
+        )
 
     if errors:
         return [], 0, errors
@@ -252,6 +266,30 @@ def build_line_items(
                 "unit_price_cents": pack_price,
                 "line_total_cents": pack_fee_total,
                 "pack_mix": pack,
+            }
+        )
+
+    # Minis packs: one flavor per pack. cookies_per_unit stays 0 so these
+    # are not added to the full-size bake count.
+    per_pack = Config.MINIS_PER_PACK
+    minis_price = Config.PRICE_MINIS_PACK_CENTS
+    for cookie_id, qty in minis.items():
+        if qty <= 0:
+            continue
+        info = catalog[cookie_id]
+        line_total = minis_price * qty
+        subtotal += line_total
+        lines.append(
+            {
+                "id": f"minis_{cookie_id}",
+                "cookie_id": cookie_id,
+                "kind": "minis_pack",
+                "name": f"{info['name']} minis {per_pack}-pack",
+                "qty": qty,
+                "cookies_per_unit": 0,
+                "minis_per_pack": per_pack,
+                "unit_price_cents": minis_price,
+                "line_total_cents": line_total,
             }
         )
 
@@ -480,6 +518,8 @@ def _order_page_context(form=None):
         "publishable_key": Config.STRIPE_PUBLISHABLE_KEY,
         "price_individual": Config.PRICE_INDIVIDUAL_CENTS,
         "price_six_pack": Config.PRICE_SIX_PACK_CENTS,
+        "price_minis_pack": Config.PRICE_MINIS_PACK_CENTS,
+        "minis_per_pack": Config.MINIS_PER_PACK,
         "pickup_slots": slots,
         "pickup_slots_json": slots,
         "same_week": sw,
@@ -505,6 +545,7 @@ def order():
 
     singles = parse_qty_form("single")
     pack = parse_qty_form("pack")
+    minis = parse_qty_form("minis")
 
     errors = []
     if not name:
@@ -550,7 +591,7 @@ def order():
                 pickup_day = "friday" if pickup_d.weekday() == 4 else "saturday"
                 batch = batch_week_from_pickup_date(pickup_d)
 
-    lines, subtotal, line_errors = build_line_items(singles, pack)
+    lines, subtotal, line_errors = build_line_items(singles, pack, minis)
     errors.extend(line_errors)
     if fulfillment == "delivery" and subtotal < Config.DELIVERY_MIN_CENTS:
         errors.append(
@@ -805,6 +846,8 @@ def admin_dashboard():
             count_rows.append({"id": cookie_id, "name": cookie_id, "qty": q})
             total_cookies += q
 
+    minis_rows, minis_total = _minis_bake_rows(orders, catalog)
+
     fri = sum(1 for o in orders if (o.get("pickup_day") or "") == "friday")
     sat = sum(1 for o in orders if (o.get("pickup_day") or "") == "saturday")
 
@@ -813,6 +856,8 @@ def admin_dashboard():
         orders=orders,
         count_rows=count_rows,
         total_cookies=total_cookies,
+        minis_rows=minis_rows,
+        minis_total=minis_total,
         products=products,
         weeks=weeks,
         selected_batch=selected,
@@ -875,10 +920,13 @@ def admin_print_counts():
         q = counts.get(cookie_id, 0)
         total_cookies += q
         count_rows.append({"name": info["name"], "qty": q})
+    minis_rows, minis_total = _minis_bake_rows(orders, catalog)
     return render_template(
         "admin/print_counts.html",
         count_rows=count_rows,
         total_cookies=total_cookies,
+        minis_rows=minis_rows,
+        minis_total=minis_total,
         products=products,
         order_count=len(orders),
         selected_batch=selected,
@@ -887,9 +935,46 @@ def admin_print_counts():
     )
 
 
+def _minis_bake_rows(orders: list[dict], catalog: dict) -> tuple[list[dict], int]:
+    """Minis packs to bake, separate from full-size cookie counts."""
+    counts = aggregate_minis_counts(orders)
+    rows = []
+    total_packs = 0
+    seen = set()
+    for cookie_id, info in catalog.items():
+        seen.add(cookie_id)
+        qty = int(counts.get(cookie_id, 0) or 0)
+        if qty <= 0:
+            continue
+        rows.append(
+            {
+                "name": info["name"],
+                "qty": qty,
+                "minis": qty * Config.MINIS_PER_PACK,
+            }
+        )
+        total_packs += qty
+    for cookie_id, qty in counts.items():
+        if cookie_id in seen:
+            continue
+        qty = int(qty or 0)
+        if qty <= 0:
+            continue
+        rows.append(
+            {
+                "name": cookie_id,
+                "qty": qty,
+                "minis": qty * Config.MINIS_PER_PACK,
+            }
+        )
+        total_packs += qty
+    return rows, total_packs
+
+
 def _order_item_summary(order: dict) -> list[str]:
     pack_parts = []
     singles = []
+    minis = []
     packs = 0
     for item in order.get("items") or []:
         qty = int(item.get("qty") or 0)
@@ -907,6 +992,8 @@ def _order_item_summary(order: dict) -> list[str]:
             pack_parts.append(f"{qty} {name}")
         elif kind == "six_pack_fee":
             packs = qty
+        elif kind == "minis_pack":
+            minis.append(f"{qty}× {name}")
     lines = []
     if packs:
         mix = ", ".join(pack_parts)
@@ -915,6 +1002,7 @@ def _order_item_summary(order: dict) -> list[str]:
             line += f" ({mix})"
         lines.append(line)
     lines.extend(singles)
+    lines.extend(minis)
     return lines or ["(see order list)"]
 
 

@@ -75,9 +75,22 @@
       {% endfor %}
       <li><span>Total cookies</span><strong>{{ total_cookies }}</strong></li>
     </ul>
+    {% if minis_rows %}
+    <h2 style="text-align:left; font-size:1.35rem; margin: 22px 0 12px;">Minis packs to bake</h2>
+    <p style="text-align:left; color:var(--muted); margin-top:0;">
+      Separate from the full-size counts above. Each pack is {{ minis_per_pack }} mini cookies of one flavor.
+    </p>
+    <ul>
+      {% for row in minis_rows %}
+        <li><span>{{ row.name }}</span><strong>{{ row.qty }} pack{{ 's' if row.qty != 1 else '' }} · {{ row.minis }} minis</strong></li>
+      {% endfor %}
+      <li><span>Total minis packs</span><strong>{{ minis_total }}</strong></li>
+    </ul>
+    {% endif %}
     <ul style="margin-top:16px; border-top:1px solid var(--cream-dark); padding-top:8px;">
       <li><span>Individual singles sold</span><strong>{{ products.singles }}</strong></li>
       <li><span>6-packs sold</span><strong>{{ products.six_packs }}</strong></li>
+      <li><span>Minis {{ minis_per_pack }}-packs sold</span><strong>{{ products.minis_packs }}</strong></li>
       <li><span>Friday pickups/deliveries</span><strong>{{ pickup_friday_orders }}</strong></li>
       <li><span>Saturday pickups/deliveries</span><strong>{{ pickup_saturday_orders }}</strong></li>
     </ul>

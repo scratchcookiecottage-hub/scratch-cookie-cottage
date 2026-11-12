@@ -26,9 +26,15 @@ class Config:
     # How many weeks of Friday/Saturday slots to show on the calendar
     PICKUP_WEEKS_AHEAD = _int("PICKUP_WEEKS_AHEAD", 8)
 
-    # Individual cookie and half-dozen (6-pack) prices in cents
+    # Individual cookie, half-dozen (6-pack), and single-flavor minis pack prices in cents
     PRICE_INDIVIDUAL_CENTS = _int("PRICE_INDIVIDUAL_CENTS", 400)  # $4.00
     PRICE_SIX_PACK_CENTS = _int("PRICE_SIX_PACK_CENTS", 2000)  # $20.00
+    PRICE_MINIS_PACK_CENTS = _int("PRICE_MINIS_PACK_CENTS", 1000)  # $10.00
+    # Mini cookies in one pack. One flavor per pack — customers do not mix flavors.
+    MINIS_PER_PACK = 8
+    # Flavor photos on the Minis Packs cards and the order-form rows.
+    # Set this to True to show each flavor's catalog image again.
+    SHOW_MINIS_PHOTOS = False
     DELIVERY_FEE_CENTS = _int("DELIVERY_FEE_CENTS", 0)
     DELIVERY_MIN_CENTS = _int("DELIVERY_MIN_CENTS", 2000)  # $20.00 cookie subtotal
     # Local delivery: zips about 20 minutes from 78746 (West Lake Hills).

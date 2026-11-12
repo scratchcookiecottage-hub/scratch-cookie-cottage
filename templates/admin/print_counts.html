@@ -29,7 +29,26 @@
       <strong>6-packs:</strong> {{ products.six_packs }}
       &nbsp;·&nbsp;
       <strong>Singles:</strong> {{ products.singles }}
+      &nbsp;·&nbsp;
+      <strong>Minis {{ minis_per_pack }}-packs:</strong> {{ products.minis_packs }}
     </p>
+
+    {% if minis_rows %}
+    <h2 style="margin-top: 28px;">Minis packs — {{ minis_per_pack }} minis each</h2>
+    <p class="print-meta">Not included in the full-size cookie totals above.</p>
+    <ul class="counts-box big-counts" style="list-style:none; padding:20px;">
+      {% for row in minis_rows %}
+        <li>
+          <span>{{ row.name }}</span>
+          <strong>{{ row.qty }} pack{{ 's' if row.qty != 1 else '' }} ({{ row.minis }} minis)</strong>
+        </li>
+      {% endfor %}
+      <li style="border-top: 2px solid #3d3229; margin-top: 8px; padding-top: 16px;">
+        <span>TOTAL MINIS PACKS</span>
+        <strong>{{ minis_total }}</strong>
+      </li>
+    </ul>
+    {% endif %}
 
     <p style="margin-top: 32px; color: #555;">
       Tip: use this sheet for shopping and batching. Use “Print order list” for packing/pickup by day.

@@ -4,6 +4,8 @@
 
   const priceIndividual = parseInt(form.dataset.priceIndividual || "400", 10);
   const priceSixPack = parseInt(form.dataset.priceSixPack || "2000", 10);
+  const priceMinisPack = parseInt(form.dataset.priceMinisPack || "1000", 10);
+  const minisPerPack = parseInt(form.dataset.minisPerPack || "8", 10);
   const deliveryFee = parseInt(form.dataset.deliveryFee || "0", 10);
   const deliveryMin = parseInt(form.dataset.deliveryMin || "2000", 10);
 
@@ -15,6 +17,7 @@
   const packSumEl = document.getElementById("pack-sum");
   const packHintEl = document.getElementById("pack-hint");
   const singleSumEl = document.getElementById("single-sum");
+  const minisSumEl = document.getElementById("minis-sum");
 
   // ── Totals ──────────────────────────────────────────────
 
@@ -38,10 +41,11 @@
   function recalc() {
     const singleTotal = sumInputs("single");
     const packTotal = sumInputs("pack");
+    const minisTotal = sumInputs("minis");
     const packs = Math.floor(packTotal / 6);
     const packRemainder = packTotal % 6;
 
-    let subtotal = singleTotal * priceIndividual + packs * priceSixPack;
+    let subtotal = singleTotal * priceIndividual + packs * priceSixPack + minisTotal * priceMinisPack;
     const fee = fulfillment() === "delivery" ? deliveryFee : 0;
 
     if (subtotalEl) subtotalEl.textContent = money(subtotal);
@@ -67,6 +71,22 @@
         singleTotal === 0
           ? "No individual cookies selected"
           : singleTotal + " cookie(s) × " + money(priceIndividual);
+    }
+
+    if (minisSumEl) {
+      if (minisTotal === 0) {
+        minisSumEl.textContent = "No minis packs selected";
+      } else {
+        var packWord = minisTotal === 1 ? "pack" : "packs";
+        minisSumEl.textContent =
+          minisTotal +
+          " " +
+          packWord +
+          " · " +
+          minisTotal * minisPerPack +
+          " minis · " +
+          money(minisTotal * priceMinisPack);
+      }
     }
 
     if (packSumEl) {

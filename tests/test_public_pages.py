@@ -61,6 +61,8 @@ class PublicPagesTest(unittest.TestCase):
         html = self.client.get("/order").get_data(as_text=True)
         self.assertIn('name="pack_chocolate_chip"', html)
         self.assertIn('name="single_chocolate_chip"', html)
+        self.assertIn('name="minis_chocolate_chip"', html)
+        self.assertIn('id="minis-packs"', html)
         self.assertIn('name="pickup_date"', html)
         self.assertIn('name="fulfillment"', html)
         self.assertIn("qty-thumb", html)
@@ -176,6 +178,283 @@ class OrderLogicFreezeTest(unittest.TestCase):
         ok, reason = is_pickup_date_available(friday, after)
         self.assertFalse(ok)
         self.assertTrue(reason)
+
+
+class MinisPackTest(unittest.TestCase):
+    """Single-flavor 8-packs at $10, drawn from the live catalog."""
+
+    def test_home_and_order_list_every_current_flavor(self):
+        from app import app
+
+        app.config["TESTING"] = True
+        client = app.test_client()
+        home = client.get("/").get_data(as_text=True)
+        start = home.index('id="minis-packs"')
+        section = home[start:home.index("</section>", start)]
+        for name in (
+            "Brown Butter Chocolate Chip",
+            "Macadamia White Chocolate",
+            "Salted Caramel Chocolate Pecan",
+            "White Miso Peanut Butter",
+        ):
+            self.assertIn(name, section)
+        self.assertIn("$10.00", section)
+        self.assertIn("8 mini cookies", section)
+        self.assertIn("no mixing", section.lower())
+        self.assertIn("/order#minis-packs", section)
+
+        order = client.get("/order").get_data(as_text=True)
+        for cookie_id in (
+            "chocolate_chip",
+            "macadamia",
+            "salted_caramel",
+            "peanut_butter",
+        ):
+            self.assertIn(f'name="minis_{cookie_id}"', order)
+        self.assertIn('data-price-minis-pack="1000"', order)
+        self.assertIn('data-minis-per-pack="8"', order)
+        self.assertIn("No mixing", order)
+        self.assertNotIn("<img", section)
+        minis_order = order[order.index('id="minis-packs"'):order.index("Your info")]
+        self.assertNotIn("qty-thumb", minis_order)
+        self.assertNotIn("<img", minis_order)
+
+    def test_minis_photos_return_when_the_flag_is_on(self):
+        from app import app
+        from config import Config
+
+        app.config["TESTING"] = True
+        client = app.test_client()
+        previous = Config.SHOW_MINIS_PHOTOS
+        Config.SHOW_MINIS_PHOTOS = True
+        try:
+            home = client.get("/").get_data(as_text=True)
+            start = home.index('id="minis-packs"')
+            section = home[start:home.index("</section>", start)]
+            self.assertIn("has-photo", section)
+            self.assertIn("images/chocolate_chip.jpg", section)
+
+            order = client.get("/order").get_data(as_text=True)
+            minis_order = order[order.index('id="minis-packs"'):order.index("Your info")]
+            self.assertIn("qty-thumb", minis_order)
+            self.assertIn("images/chocolate_chip.jpg", minis_order)
+        finally:
+            Config.SHOW_MINIS_PHOTOS = previous
+
+    def test_new_catalog_flavor_gets_a_minis_pack(self):
+        from unittest.mock import patch
+
+        from app import app
+        from config import Config
+
+        catalog = {
+            "future_flavor": {
+                "name": "Future Flavor Crumble",
+                "description": "Added after launch.",
+                "img_default": "",
+                "img_hover": "",
+            }
+        }
+        app.config["TESTING"] = True
+        client = app.test_client()
+        with patch.object(Config, "cookie_catalog", return_value=catalog):
+            home = client.get("/").get_data(as_text=True)
+            order = client.get("/order").get_data(as_text=True)
+        start = home.index('id="minis-packs"')
+        section = home[start:home.index("</section>", start)]
+        self.assertIn("Future Flavor Crumble", section)
+        self.assertNotIn("Brown Butter Chocolate Chip", section)
+        self.assertIn('name="minis_future_flavor"', order)
+        self.assertNotIn('name="minis_chocolate_chip"', order)
+
+    def test_minis_line_items_stay_out_of_full_size_bake_counts(self):
+        from app import _order_item_summary, build_line_items, stripe_line_items_from_order
+        from db import (
+            aggregate_cookie_counts,
+            aggregate_minis_counts,
+            aggregate_product_summary,
+        )
+        from notify import order_summary
+
+        lines, subtotal, errors = build_line_items(
+            {}, {}, {"chocolate_chip": 1, "macadamia": 2}
+        )
+        self.assertEqual(errors, [])
+        self.assertEqual(subtotal, 3000)
+        chip = next(line for line in lines if line["cookie_id"] == "chocolate_chip")
+        self.assertEqual(chip["kind"], "minis_pack")
+        self.assertEqual(chip["qty"], 1)
+        self.assertEqual(chip["unit_price_cents"], 1000)
+        self.assertEqual(chip["line_total_cents"], 1000)
+        self.assertEqual(chip["minis_per_pack"], 8)
+        self.assertEqual(chip["cookies_per_unit"], 0)
+        self.assertEqual(chip["name"], "Brown Butter Chocolate Chip minis 8-pack")
+
+        mixed, mixed_total, errors = build_line_items(
+            {"peanut_butter": 1}, {}, {"salted_caramel": 1}
+        )
+        self.assertEqual(errors, [])
+        self.assertEqual(mixed_total, 1400)
+
+        _, _, errors = build_line_items({}, {"chocolate_chip": 5}, {"macadamia": 1})
+        self.assertTrue(errors)
+        _, _, errors = build_line_items({}, {}, {})
+        self.assertTrue(errors)
+
+        order = {
+            "order_number": "SCC-TEST",
+            "customer_name": "Ada",
+            "customer_email": "ada@example.com",
+            "customer_phone": "555",
+            "fulfillment": "pickup",
+            "pickup_date": "2026-11-20",
+            "items": mixed,
+            "total_cents": mixed_total,
+        }
+        counts = aggregate_cookie_counts([order])
+        self.assertEqual(counts.get("salted_caramel", 0), 0)
+        self.assertEqual(counts["peanut_butter"], 1)
+        self.assertEqual(aggregate_minis_counts([order])["salted_caramel"], 1)
+        summary = aggregate_product_summary([order])
+        self.assertEqual(summary["minis_packs"], 1)
+        self.assertEqual(summary["singles"], 1)
+        self.assertEqual(summary["six_packs"], 0)
+
+        slips = _order_item_summary(order)
+        self.assertIn("1× Salted Caramel Chocolate Pecan minis 8-pack", slips)
+        self.assertIn("1× White Miso Peanut Butter", slips)
+        _, body = order_summary(order)
+        self.assertIn("1× Salted Caramel Chocolate Pecan minis 8-pack", body)
+        self.assertIn("$14.00", body)
+
+        stripe_items = stripe_line_items_from_order(lines, 0)
+        self.assertEqual(len(stripe_items), 2)
+        chip_stripe = next(
+            item
+            for item in stripe_items
+            if "Brown Butter" in item["price_data"]["product_data"]["name"]
+        )
+        self.assertEqual(chip_stripe["quantity"], 1)
+        self.assertEqual(chip_stripe["price_data"]["unit_amount"], 1000)
+
+    def test_order_flow_stores_minis_pack_and_charges_ten_dollars(self):
+        import re
+        import tempfile
+        from pathlib import Path
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from app import app
+        from config import Config
+        from db import get_order_by_number, init_db
+        from notify import order_summary
+        from order_window import list_pickup_slots
+
+        slot = next(item for item in list_pickup_slots() if item["available"])
+        notified = []
+        captured = {}
+
+        def fake_create(**kwargs):
+            captured["create"] = kwargs
+            return SimpleNamespace(
+                id="cs_test_minis",
+                client_secret="cs_test_secret",
+                status="open",
+                payment_status="unpaid",
+                metadata=kwargs.get("metadata") or {},
+            )
+
+        def fake_retrieve(session_id):
+            self.assertEqual(session_id, "cs_test_minis")
+            return SimpleNamespace(
+                id="cs_test_minis",
+                status="complete",
+                payment_status="paid",
+                metadata=captured["create"].get("metadata") or {},
+            )
+
+        app.config["TESTING"] = True
+        client = app.test_client()
+        old_db = Config.DATABASE_PATH
+        old_secret = Config.STRIPE_SECRET_KEY
+        old_pub = Config.STRIPE_PUBLISHABLE_KEY
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            Config.DATABASE_PATH = str(Path(tmp.name) / "orders.db")
+            Config.STRIPE_SECRET_KEY = "sk_test_minis"
+            Config.STRIPE_PUBLISHABLE_KEY = "pk_test_minis"
+            init_db()
+
+            page = client.get("/order")
+            token = re.search(
+                r'name="csrf_token" value="([^"]+)"',
+                page.get_data(as_text=True),
+            ).group(1)
+            with (
+                patch("app.stripe.checkout.Session.create", side_effect=fake_create),
+                patch("app.stripe.checkout.Session.retrieve", side_effect=fake_retrieve),
+                patch("app.notify_new_order", side_effect=notified.append),
+            ):
+                pay = client.post(
+                    "/order",
+                    data={
+                        "csrf_token": token,
+                        "customer_name": "Minis Tester",
+                        "customer_email": "minis@example.com",
+                        "customer_phone": "512-555-0100",
+                        "fulfillment": "pickup",
+                        "pickup_date": slot["date"],
+                        "minis_chocolate_chip": "1",
+                        "minis_peanut_butter": "2",
+                    },
+                )
+                self.assertEqual(pay.status_code, 200)
+                pay_html = pay.get_data(as_text=True)
+                self.assertIn("$30.00", pay_html)
+                self.assertIn("Checkout", pay_html)
+
+                done = client.get(
+                    "/order/return?session_id=cs_test_minis",
+                    follow_redirects=True,
+                )
+            done_html = done.get_data(as_text=True)
+            self.assertIn("Thank you", done_html)
+            self.assertIn("1 × Brown Butter Chocolate Chip minis 8-pack ($10.00)", done_html)
+            self.assertIn("2 × White Miso Peanut Butter minis 8-pack ($20.00)", done_html)
+            self.assertIn("$30.00", done_html)
+
+            stripe_items = captured["create"]["line_items"]
+            self.assertEqual(
+                sorted(
+                    (
+                        item["price_data"]["product_data"]["name"],
+                        item["quantity"],
+                        item["price_data"]["unit_amount"],
+                    )
+                    for item in stripe_items
+                ),
+                [
+                    ("Brown Butter Chocolate Chip minis 8-pack", 1, 1000),
+                    ("White Miso Peanut Butter minis 8-pack", 2, 1000),
+                ],
+            )
+
+            order_number = re.search(r"SCC-\d{6}-[A-F0-9]+", pay_html).group(0)
+            stored = get_order_by_number(order_number)
+            self.assertEqual(stored["total_cents"], 3000)
+            self.assertEqual(stored["payment_status"], "paid")
+            kinds = {item["kind"] for item in stored["items"]}
+            self.assertEqual(kinds, {"minis_pack"})
+            self.assertEqual(len(notified), 1)
+            _, email_body = order_summary(notified[0])
+            self.assertIn("1× Brown Butter Chocolate Chip minis 8-pack", email_body)
+            self.assertIn("2× White Miso Peanut Butter minis 8-pack", email_body)
+            self.assertIn("Total: $30.00", email_body)
+        finally:
+            Config.DATABASE_PATH = old_db
+            Config.STRIPE_SECRET_KEY = old_secret
+            Config.STRIPE_PUBLISHABLE_KEY = old_pub
+            tmp.cleanup()
 
 
 if __name__ == "__main__":
