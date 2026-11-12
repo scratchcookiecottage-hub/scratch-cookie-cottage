@@ -262,6 +262,27 @@
     return y + "-" + pad(m + 1) + "-" + pad(d);
   }
 
+  function selectedSlot() {
+    const iso = pickupInput ? pickupInput.value : "";
+    return iso && slotByDate[iso] ? slotByDate[iso] : null;
+  }
+
+  function syncDateFulfillment() {
+    const slot = selectedSlot();
+    const sunday = !!(slot && slot.weekday === "sunday");
+    const deliveryRadio = form.querySelector('input[name="fulfillment"][value="delivery"]');
+    const pickupRadio = form.querySelector('input[name="fulfillment"][value="pickup"]');
+    const note = document.getElementById("sunday-market-note");
+    if (deliveryRadio) {
+      deliveryRadio.disabled = sunday;
+      if (sunday && deliveryRadio.checked && pickupRadio) {
+        pickupRadio.checked = true;
+      }
+    }
+    if (note) note.hidden = !sunday;
+    syncDelivery();
+  }
+
   function setSelected(iso) {
     if (pickupInput) pickupInput.value = iso || "";
     if (selectedLabel) {
@@ -270,12 +291,18 @@
         selectedLabel.className = "pack-status";
       } else {
         const slot = slotByDate[iso];
-        selectedLabel.textContent = slot
-          ? "Selected: " + slot.label
-          : "Selected: " + iso;
+        if (slot && slot.weekday === "sunday") {
+          selectedLabel.textContent =
+            "Selected: " + slot.label + " — market pickup only, 10am–2pm";
+        } else {
+          selectedLabel.textContent = slot
+            ? "Selected: " + slot.label
+            : "Selected: " + iso;
+        }
         selectedLabel.className = "pack-status ok-box";
       }
     }
+    syncDateFulfillment();
     // Refresh selected styles
     if (calGrid) {
       calGrid.querySelectorAll(".cal-day").forEach(function (el) {
@@ -321,15 +348,15 @@
       cell.dataset.date = iso;
 
       const slot = slotByDate[iso];
-      const dow = new Date(viewY, viewM, day).getDay(); // 0 Sun … 5 Fri 6 Sat
-      const isWeekendPickup = dow === 5 || dow === 6;
+      const dow = new Date(viewY, viewM, day).getDay(); // 0 Sun … 6 Sat
+      const isWeekendPickup = dow === 0 || dow === 6;
 
       if (!isWeekendPickup) {
         cell.classList.add("muted");
         cell.disabled = true;
-        cell.title = "Pickup is Friday or Saturday only";
+        cell.title = "Pickup is Saturday or Sunday only";
       } else if (!slot) {
-        // Fri/Sat outside our booking horizon
+        // Sat/Sun outside our booking horizon
         cell.classList.add("locked");
         cell.disabled = true;
         cell.title = "Outside booking window";
@@ -339,7 +366,10 @@
         cell.title = slot.reason || "Unavailable (past weekly cutoff)";
       } else {
         cell.classList.add("available");
-        cell.title = "Pickup " + slot.label;
+        cell.title =
+          slot.weekday === "sunday"
+            ? "Market pickup only " + slot.label
+            : "Pickup " + slot.label;
         cell.addEventListener("click", function () {
           setSelected(iso);
         });
@@ -395,15 +425,25 @@
   // Block submit without a valid date
   form.addEventListener("submit", function (e) {
     const val = pickupInput ? pickupInput.value : "";
-    if (!val || !slotByDate[val] || !slotByDate[val].available) {
+    const slot = val ? slotByDate[val] : null;
+    if (!val || !slot || !slot.available) {
       e.preventDefault();
       if (selectedLabel) {
         selectedLabel.textContent =
-          "Please select an available Friday or Saturday on the calendar.";
+          "Please select an available Saturday or Sunday on the calendar.";
         selectedLabel.className = "pack-status warn-box";
       }
       const cal = document.getElementById("pickup-calendar");
       if (cal) cal.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (slot.weekday === "sunday" && fulfillment() === "delivery") {
+      e.preventDefault();
+      if (selectedLabel) {
+        selectedLabel.textContent =
+          "Sunday is pickup only at the Triangle Farmers Market. Delivery is not available that day.";
+        selectedLabel.className = "pack-status warn-box";
+      }
     }
   });
 

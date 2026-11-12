@@ -121,6 +121,7 @@ def inject_globals():
         "instagram_handle": Config.INSTAGRAM_HANDLE,
         "instagram_url": Config.instagram_url(),
         "pickup_note": Config.PICKUP_NOTE,
+        "sunday_market": Config.SUNDAY_MARKET,
         "dshs_id": Config.DSHS_ID,
         "cottage_food_disclosure": Config.COTTAGE_FOOD_DISCLOSURE,
         "public_base_url": Config.PUBLIC_BASE_URL,
@@ -575,7 +576,7 @@ def order():
     pickup_date_iso = ""
     batch = ""
     if not pickup_date_raw:
-        errors.append("Please select a Friday or Saturday pickup date on the calendar.")
+        errors.append("Please select a Saturday or Sunday pickup date on the calendar.")
     else:
         try:
             pickup_d = date.fromisoformat(pickup_date_raw)
@@ -583,13 +584,27 @@ def order():
             errors.append("Invalid pickup date.")
             pickup_d = None
         if pickup_d is not None:
-            ok, reason = is_pickup_date_available(pickup_d)
-            if not ok:
-                errors.append(reason or "That pickup date is not available.")
+            sunday_delivery = fulfillment == "delivery" and pickup_d.weekday() == 6
+            if pickup_d.weekday() == 4:
+                errors.append(
+                    "Friday pickup and delivery are no longer available. "
+                    "Please choose a Saturday or Sunday."
+                )
             else:
-                pickup_date_iso = pickup_d.isoformat()
-                pickup_day = "friday" if pickup_d.weekday() == 4 else "saturday"
-                batch = batch_week_from_pickup_date(pickup_d)
+                ok, reason = is_pickup_date_available(pickup_d)
+                if not ok:
+                    errors.append(reason or "That pickup date is not available.")
+                if sunday_delivery:
+                    market = Config.SUNDAY_MARKET
+                    errors.append(
+                        "Sunday is pickup only at the "
+                        f"{market['name']} ({market['place']}, {market['address']}, "
+                        f"{market['hours']}). Delivery is not available on Sunday."
+                    )
+                if ok and not sunday_delivery and pickup_d.weekday() in (5, 6):
+                    pickup_date_iso = pickup_d.isoformat()
+                    pickup_day = "saturday" if pickup_d.weekday() == 5 else "sunday"
+                    batch = batch_week_from_pickup_date(pickup_d)
 
     lines, subtotal, line_errors = build_line_items(singles, pack, minis)
     errors.extend(line_errors)
@@ -850,6 +865,7 @@ def admin_dashboard():
 
     fri = sum(1 for o in orders if (o.get("pickup_day") or "") == "friday")
     sat = sum(1 for o in orders if (o.get("pickup_day") or "") == "saturday")
+    sun = sum(1 for o in orders if (o.get("pickup_day") or "") == "sunday")
 
     return render_template(
         "admin/dashboard.html",
@@ -865,6 +881,7 @@ def admin_dashboard():
         pickup_dates=pickup_dates,
         pickup_friday_orders=fri,
         pickup_saturday_orders=sat,
+        pickup_sunday_orders=sun,
         push_phone_count=len(list_push_tokens()),
         firebase_ready=bool(Config.FIREBASE_CREDENTIALS),
         seasonal=get_seasonal(),
@@ -1476,8 +1493,8 @@ def order_pickup_display_filter(order: dict) -> str:
     batch = (order or {}).get("batch_week") or ""
     if day and batch:
         dates = batch_pickup_dates(batch)
-        key = "friday" if day == "friday" else "saturday"
-        return dates.get(key, day.capitalize())
+        if day in ("friday", "saturday", "sunday"):
+            return dates.get(day, day.capitalize())
     return day.capitalize() if day else "—"
 
 

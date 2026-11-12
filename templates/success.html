@@ -14,6 +14,16 @@
       </strong>
       {{ order | order_pickup_display }}
     </p>
+    {% if order.fulfillment != 'delivery' and order.pickup_day == 'sunday' %}
+    <p>
+      <strong>Sunday market pickup:</strong>
+      {{ sunday_market.name }}, {{ sunday_market.place }},
+      {{ sunday_market.address }} ({{ sunday_market.near }}),
+      {{ sunday_market.hours }}. Pickup only — no Sunday delivery.
+    </p>
+    {% elif order.fulfillment != 'delivery' and order.pickup_day == 'saturday' %}
+    <p>Saturday pickup is at our cottage. We’ll email you the address.</p>
+    {% endif %}
     <p><strong>Fulfillment:</strong> {{ order.fulfillment | capitalize }}</p>
     {% if order.fulfillment == 'delivery' and order.address %}
       <p><strong>Address:</strong> {{ order.address }}</p>

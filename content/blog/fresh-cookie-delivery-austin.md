@@ -2,16 +2,16 @@
 title: "Fresh Cookie Delivery in Austin: How Weekend Ordering Works"
 slug: fresh-cookie-delivery-austin
 date: 2026-09-04
-description: Order fresh small-batch cookies in Austin for Friday or Saturday cottage pickup, or local delivery on qualifying orders. Here’s how the weekly cutoff works.
+description: Order fresh small-batch cookies in Austin for Saturday cottage pickup, Sunday market pickup, or local Saturday delivery on qualifying orders. Here’s how the weekly cutoff works.
 image: fresh-cookie-delivery-austin.jpg
 draft: false
 ---
 
-If you are searching for fresh cookies in Austin, timing matters as much as flavor. Scratch Cookie Cottage is a small-batch cottage bakery in the Austin / West Lake Hills area. We mix, scoop, and bake from scratch for Friday and Saturday fulfillment—not a walk-in counter with trays waiting all week.
+If you are searching for fresh cookies in Austin, timing matters as much as flavor. Scratch Cookie Cottage is a small-batch cottage bakery in the Austin / West Lake Hills area. We mix, scoop, and bake from scratch for Saturday fulfillment and Sunday market pickup—not a walk-in counter with trays waiting all week.
 
 That weekly rhythm is how the cookies stay soft in the center, golden at the edges, and actually fresh when they reach you.
 
-Here is exactly how ordering, cottage pickup, and local delivery work.
+Here is exactly how ordering, cottage pickup, Sunday market pickup, and local delivery work.
 
 ## What You Can Order
 
@@ -30,8 +30,8 @@ Curious about the miso cookie? Read [What Does Miso Do in Cookies?](/blog/what-d
 
 Same-weekend orders close Wednesday at 11:59 p.m. Central.
 
-- Order before the cutoff to choose this Friday or Saturday.
-- After the cutoff, same-week dates grey out. You can still order—just pick a future Friday or Saturday.
+- Order before the cutoff to choose this Saturday or Sunday.
+- After the cutoff, same-week dates grey out. You can still order—just pick a future Saturday or Sunday.
 - Card payment is due when you place the order, then we bake your box.
 
 This is pre-order baking, not same-day cookie delivery. If you need cookies for a firm date, order early.
@@ -40,7 +40,7 @@ This is pre-order baking, not same-day cookie delivery. If you need cookies for 
 
 ## Cottage Pickup
 
-Pickup is always at our cottage on Friday or Saturday.
+Saturday pickup is at our cottage. Sunday pickup is at the Triangle Farmers Market, Triangle Commons Pocket Park, 722 W. 46th St., Austin, TX 78751 (near 45th and Guadalupe), 10am–2pm, starting November 15, 2026. Sunday is pickup only — there is no Sunday delivery.
 
 We email the address after you order. That keeps the kitchen private while still making pickup simple. Bring your order confirmation, and we’ll have your cookies ready for the date you selected.
 
@@ -58,7 +58,7 @@ We do not currently offer nationwide shipping from the cottage order flow. Local
 
 Choose cottage pickup if:
 
-- You are nearby and want to grab the box on Friday or Saturday
+- You are nearby and want to grab the box on Saturday, or at the Sunday market
 - You are combining cookies with another local errand
 - You want the simplest fulfillment path
 
@@ -66,7 +66,7 @@ Choose local delivery if:
 
 - Your order is $20 or more and your ZIP is in the delivery area
 - You are sending a gift and want it dropped off
-- A Friday or Saturday handoff is easier than a stop at the cottage
+- A Saturday handoff is easier than a stop at the cottage
 
 For larger office, event, or wholesale needs, use the [wholesale inquiry page](/wholesale) instead of the regular six-pack flow.
 
@@ -76,7 +76,7 @@ A build-your-own six-pack makes an easy Austin host gift, thank-you, or dessert 
 
 ## Order Fresh Cookies for This Weekend
 
-Scratch Cookie Cottage bakes small batches from scratch in the Austin / West Lake Hills area. [Order online](/order), pick Friday or Saturday, and choose cottage pickup or qualifying local delivery. More about our [cottage kitchen](/story).
+Scratch Cookie Cottage bakes small batches from scratch in the Austin / West Lake Hills area. [Order online](/order), pick Saturday for cottage pickup or qualifying local delivery, or Sunday for market pickup. More about our [cottage kitchen](/story).
 
 **Order fresh cookies →** [/order](/order)
 

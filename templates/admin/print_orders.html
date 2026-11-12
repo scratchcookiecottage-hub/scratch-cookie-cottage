@@ -30,6 +30,7 @@
             {{ o.pickup_date | pickup_date_fmt | upper }}
           {% elif o.pickup_day == 'friday' %}FRIDAY ({{ pickup_dates.friday }})
           {% elif o.pickup_day == 'saturday' %}SATURDAY ({{ pickup_dates.saturday }})
+          {% elif o.pickup_day == 'sunday' %}SUNDAY ({{ pickup_dates.sunday }})
           {% else %}DAY TBD{% endif %}
         </strong>
         &nbsp;·&nbsp;

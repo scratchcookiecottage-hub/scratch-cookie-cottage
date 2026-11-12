@@ -6,8 +6,12 @@
   <div class="banner open">{{ message or window_message }}</div>
   <div class="panel">
     <p>
-      You can order cookies anytime and choose a Friday or Saturday pickup
-      on the calendar. Same-week dates close after {{ cutoff_display() }} CST.
+      You can order cookies anytime and choose a Saturday or Sunday
+      on the calendar. Saturday is cottage pickup or local delivery.
+      Sunday is pickup only at the {{ sunday_market.name }},
+      {{ sunday_market.place }}, {{ sunday_market.address }}
+      ({{ sunday_market.near }}), {{ sunday_market.hours }}.
+      Same-week Saturday and Sunday close after {{ cutoff_display() }} CST.
     </p>
   </div>
   <div class="btn-row">

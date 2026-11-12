@@ -56,6 +56,11 @@ class PublicPagesTest(unittest.TestCase):
         self.assertIn("cottage", markets.lower())
         self.assertIn("/order", markets)
         self.assertNotIn("Scan a booth QR", markets)
+        self.assertIn("Triangle Farmers Market", markets)
+        self.assertIn("722 W. 46th St.", markets)
+        self.assertIn("10am", markets)
+        self.assertIn("2pm", markets)
+        self.assertNotIn("Friday", markets)
 
     def test_order_form_fields_preserved(self):
         html = self.client.get("/order").get_data(as_text=True)
@@ -168,40 +173,48 @@ class OrderLogicFreezeTest(unittest.TestCase):
         from order_window import is_pickup_date_available
 
         tz = pytz.timezone("America/Chicago")
-        friday = date(2026, 8, 21)
-        before = tz.localize(datetime(2026, 8, 19, 23, 59, 59))
-        after = tz.localize(datetime(2026, 8, 20, 0, 0, 1))
+        # Week of Monday Nov 16, 2026: Sat Nov 21 and Sun Nov 22.
+        saturday = date(2026, 11, 21)
+        sunday = date(2026, 11, 22)
+        friday = date(2026, 11, 20)
+        before = tz.localize(datetime(2026, 11, 18, 23, 59, 59))
+        after = tz.localize(datetime(2026, 11, 19, 0, 0, 1))
 
-        ok, _ = is_pickup_date_available(friday, before)
-        self.assertTrue(ok)
+        self.assertEqual(saturday.weekday(), 5)
+        self.assertEqual(sunday.weekday(), 6)
+        self.assertTrue(is_pickup_date_available(saturday, before)[0])
+        self.assertTrue(is_pickup_date_available(sunday, before)[0])
 
-        ok, reason = is_pickup_date_available(friday, after)
+        ok, reason = is_pickup_date_available(saturday, after)
         self.assertFalse(ok)
         self.assertTrue(reason)
+        self.assertFalse(is_pickup_date_available(sunday, after)[0])
+
+        ok, reason = is_pickup_date_available(friday, before)
+        self.assertFalse(ok)
+        self.assertIn("Saturdays and Sundays", reason)
 
 
 class MinisPackTest(unittest.TestCase):
     """Single-flavor 8-packs at $10, drawn from the live catalog."""
 
-    def test_home_and_order_list_every_current_flavor(self):
+    def test_home_hides_minis_and_order_lists_every_flavor(self):
         from app import app
 
         app.config["TESTING"] = True
         client = app.test_client()
         home = client.get("/").get_data(as_text=True)
-        start = home.index('id="minis-packs"')
-        section = home[start:home.index("</section>", start)]
+        self.assertNotIn('id="minis-packs"', home)
+        self.assertNotIn("Minis Packs", home)
+        self.assertNotIn("minis-card", home)
+        self.assertNotIn("Order Minis", home)
         for name in (
             "Brown Butter Chocolate Chip",
             "Macadamia White Chocolate",
             "Salted Caramel Chocolate Pecan",
             "White Miso Peanut Butter",
         ):
-            self.assertIn(name, section)
-        self.assertIn("$10.00", section)
-        self.assertIn("8 mini cookies", section)
-        self.assertIn("no mixing", section.lower())
-        self.assertIn("/order#minis-packs", section)
+            self.assertIn(name, home)
 
         order = client.get("/order").get_data(as_text=True)
         for cookie_id in (
@@ -214,10 +227,17 @@ class MinisPackTest(unittest.TestCase):
         self.assertIn('data-price-minis-pack="1000"', order)
         self.assertIn('data-minis-per-pack="8"', order)
         self.assertIn("No mixing", order)
-        self.assertNotIn("<img", section)
+        self.assertIn("Minis Packs", order)
         minis_order = order[order.index('id="minis-packs"'):order.index("Your info")]
         self.assertNotIn("qty-thumb", minis_order)
         self.assertNotIn("<img", minis_order)
+        for name in (
+            "Brown Butter Chocolate Chip",
+            "Macadamia White Chocolate",
+            "Salted Caramel Chocolate Pecan",
+            "White Miso Peanut Butter",
+        ):
+            self.assertIn(name, minis_order)
 
     def test_minis_photos_return_when_the_flag_is_on(self):
         from app import app
@@ -229,10 +249,8 @@ class MinisPackTest(unittest.TestCase):
         Config.SHOW_MINIS_PHOTOS = True
         try:
             home = client.get("/").get_data(as_text=True)
-            start = home.index('id="minis-packs"')
-            section = home[start:home.index("</section>", start)]
-            self.assertIn("has-photo", section)
-            self.assertIn("images/chocolate_chip.jpg", section)
+            self.assertNotIn('id="minis-packs"', home)
+            self.assertNotIn("has-photo", home)
 
             order = client.get("/order").get_data(as_text=True)
             minis_order = order[order.index('id="minis-packs"'):order.index("Your info")]
@@ -260,10 +278,9 @@ class MinisPackTest(unittest.TestCase):
         with patch.object(Config, "cookie_catalog", return_value=catalog):
             home = client.get("/").get_data(as_text=True)
             order = client.get("/order").get_data(as_text=True)
-        start = home.index('id="minis-packs"')
-        section = home[start:home.index("</section>", start)]
-        self.assertIn("Future Flavor Crumble", section)
-        self.assertNotIn("Brown Butter Chocolate Chip", section)
+        self.assertNotIn('id="minis-packs"', home)
+        self.assertIn("Future Flavor Crumble", home)
+        self.assertNotIn("Brown Butter Chocolate Chip", home)
         self.assertIn('name="minis_future_flavor"', order)
         self.assertNotIn('name="minis_chocolate_chip"', order)
 
@@ -454,6 +471,302 @@ class MinisPackTest(unittest.TestCase):
             Config.DATABASE_PATH = old_db
             Config.STRIPE_SECRET_KEY = old_secret
             Config.STRIPE_PUBLISHABLE_KEY = old_pub
+            tmp.cleanup()
+
+
+class WeekendScheduleTest(unittest.TestCase):
+    """Saturday cottage fulfillment stays; Sunday is market pickup only."""
+
+    def test_public_copy_drops_friday_and_names_the_market(self):
+        from app import app
+
+        app.config["TESTING"] = True
+        client = app.test_client()
+        paths = (
+            "/",
+            "/order",
+            "/markets",
+            "/story",
+            "/blog/fresh-cookie-delivery-austin",
+            "/blog/corporate-cookies-austin",
+            "/blog/cookie-gift-box-austin",
+            "/blog/what-does-miso-do-in-cookies",
+        )
+        for path in paths:
+            html = client.get(path).get_data(as_text=True)
+            with self.subTest(path=path):
+                self.assertNotIn("Friday", html)
+                self.assertIn("Triangle Farmers Market", html)
+                self.assertIn("722 W. 46th", html)
+
+        from flask import render_template
+
+        with app.test_request_context("/"):
+            closed = render_template("order_closed.html", message="Orders are open.")
+        self.assertNotIn("Friday", closed)
+        self.assertIn("722 W. 46th", closed)
+        self.assertIn("10am", closed)
+
+    def test_sunday_shares_saturday_batch_and_slots_skip_friday(self):
+        from order_window import (
+            batch_pickup_dates,
+            batch_week_from_pickup_date,
+            is_pickup_date_available,
+            list_pickup_slots,
+            same_week_status,
+        )
+
+        tz = pytz.timezone("America/Chicago")
+        saturday = date(2026, 11, 21)
+        sunday = date(2026, 11, 22)
+        self.assertEqual(batch_week_from_pickup_date(saturday), "2026-11-16")
+        self.assertEqual(
+            batch_week_from_pickup_date(sunday),
+            batch_week_from_pickup_date(saturday),
+        )
+
+        labels = batch_pickup_dates("2026-11-16")
+        self.assertEqual(labels["saturday_iso"], "2026-11-21")
+        self.assertEqual(labels["sunday_iso"], "2026-11-22")
+        self.assertEqual(labels["friday_iso"], "2026-11-20")
+        self.assertIn("Sunday", labels["sunday"])
+
+        before = tz.localize(datetime(2026, 11, 18, 12, 0, 0))
+        after = tz.localize(datetime(2026, 11, 19, 12, 0, 0))
+        open_msg = same_week_status(before)["message"]
+        closed_msg = same_week_status(after)["message"]
+        self.assertIn("Sat/Sun", open_msg)
+        self.assertIn("Saturday or Sunday", closed_msg)
+        self.assertNotIn("Fri", open_msg)
+        self.assertNotIn("friday", same_week_status(before))
+
+        slots = list_pickup_slots(at=before)
+        self.assertTrue(slots)
+        self.assertTrue(all(slot["weekday"] in ("saturday", "sunday") for slot in slots))
+        by_date = {slot["date"]: slot for slot in slots}
+        self.assertEqual(by_date["2026-11-22"]["batch_week"], by_date["2026-11-21"]["batch_week"])
+        self.assertFalse(by_date["2026-11-22"]["delivery_ok"])
+        self.assertTrue(by_date["2026-11-21"]["delivery_ok"])
+        self.assertNotIn("2026-11-20", by_date)
+
+        early_sunday = date(2026, 11, 8)
+        early_saturday = date(2026, 11, 7)
+        early = tz.localize(datetime(2026, 11, 3, 12, 0, 0))
+        ok, reason = is_pickup_date_available(early_sunday, early)
+        self.assertFalse(ok)
+        self.assertIn("November 15, 2026", reason)
+        self.assertTrue(is_pickup_date_available(early_saturday, early)[0])
+
+    def test_sort_places_sunday_after_saturday_and_keeps_legacy_friday(self):
+        import tempfile
+        from pathlib import Path
+
+        from config import Config
+        from db import create_order, init_db, list_orders
+
+        old_db = Config.DATABASE_PATH
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            Config.DATABASE_PATH = str(Path(tmp.name) / "orders.db")
+            init_db()
+            created = (
+                ("monday", "2026-11-01T01:00:00"),
+                ("sunday", "2026-11-01T02:00:00"),
+                ("saturday", "2026-11-01T03:00:00"),
+                ("friday", "2026-11-01T04:00:00"),
+            )
+            for day, stamp in created:
+                create_order(
+                    {
+                        "order_number": f"SCC-SORT-{day}",
+                        "created_at": stamp,
+                        "customer_name": day,
+                        "customer_email": "ada@example.com",
+                        "customer_phone": "512-555-0100",
+                        "fulfillment": "pickup",
+                        "pickup_day": day,
+                        "pickup_date": "",
+                        "address": "",
+                        "notes": "",
+                        "items": [],
+                        "subtotal_cents": 400,
+                        "delivery_fee_cents": 0,
+                        "total_cents": 400,
+                        "payment_method": "stripe",
+                        "payment_status": "paid",
+                        "batch_week": "2026-11-16",
+                        "status": "confirmed",
+                    }
+                )
+            ordered = [row["pickup_day"] for row in list_orders(batch_week="2026-11-16")]
+            self.assertEqual(ordered, ["friday", "saturday", "sunday", "monday"])
+        finally:
+            Config.DATABASE_PATH = old_db
+            tmp.cleanup()
+
+    def test_server_rejects_friday_and_sunday_delivery(self):
+        import re
+        import tempfile
+        from datetime import timedelta
+        from pathlib import Path
+
+        from app import app
+        from config import Config
+        from db import init_db
+
+        sunday = date.today() + timedelta(days=10)
+        while sunday.weekday() != 6:
+            sunday += timedelta(days=1)
+        if sunday < date(2026, 11, 15):
+            sunday = date(2026, 11, 22)
+        friday = date(2026, 11, 20)
+        self.assertEqual(friday.weekday(), 4)
+
+        app.config["TESTING"] = True
+        client = app.test_client()
+        old_db = Config.DATABASE_PATH
+        old_secret = Config.STRIPE_SECRET_KEY
+        old_pub = Config.STRIPE_PUBLISHABLE_KEY
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            Config.DATABASE_PATH = str(Path(tmp.name) / "orders.db")
+            Config.STRIPE_SECRET_KEY = ""
+            Config.STRIPE_PUBLISHABLE_KEY = ""
+            init_db()
+
+            def post(pickup_date, fulfillment):
+                page = client.get("/order")
+                token = re.search(
+                    r'name="csrf_token" value="([^"]+)"',
+                    page.get_data(as_text=True),
+                ).group(1)
+                data = {
+                    "csrf_token": token,
+                    "customer_name": "Pat",
+                    "customer_email": "pat@example.com",
+                    "customer_phone": "512-555-0199",
+                    "fulfillment": fulfillment,
+                    "pickup_date": pickup_date,
+                    "pack_chocolate_chip": "6",
+                }
+                if fulfillment == "delivery":
+                    data["delivery_zip"] = "78746"
+                    data["address"] = "1 Main St, Austin, TX 78746"
+                return client.post("/order", data=data).get_data(as_text=True)
+
+            friday_html = post(friday.isoformat(), "pickup")
+            self.assertIn("Friday pickup and delivery are no longer available", friday_html)
+
+            sunday_flash = (
+                "Sunday is pickup only at the Triangle Farmers Market "
+                "(Triangle Commons Pocket Park, 722 W. 46th St., Austin, TX 78751, 10am"
+            )
+            sunday_html = post(sunday.isoformat(), "delivery")
+            self.assertIn(sunday_flash, sunday_html)
+            self.assertIn("Delivery is not available on Sunday", sunday_html)
+
+            def accepted(html):
+                self.assertIn("Card payment is required", html)
+                self.assertNotIn(sunday_flash, html)
+                self.assertNotIn("no longer available", html)
+                self.assertNotIn("already passed", html)
+                self.assertNotIn("later weekend", html)
+                self.assertNotIn("market pickup starts", html)
+                self.assertNotIn("only available on Saturdays and Sundays", html)
+
+            accepted(post(sunday.isoformat(), "pickup"))
+            saturday = sunday - timedelta(days=1)
+            self.assertEqual(saturday.weekday(), 5)
+            accepted(post(saturday.isoformat(), "delivery"))
+        finally:
+            Config.DATABASE_PATH = old_db
+            Config.STRIPE_SECRET_KEY = old_secret
+            Config.STRIPE_PUBLISHABLE_KEY = old_pub
+            tmp.cleanup()
+
+    def test_admin_and_success_keep_legacy_friday_and_show_sunday(self):
+        import tempfile
+        from pathlib import Path
+
+        from app import app
+        from config import Config
+        from db import create_order, init_db
+
+        app.config["TESTING"] = True
+        client = app.test_client()
+        old_db = Config.DATABASE_PATH
+        old_secret = Config.PUSH_REGISTER_SECRET
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            Config.DATABASE_PATH = str(Path(tmp.name) / "orders.db")
+            Config.PUSH_REGISTER_SECRET = "test-weekend-gate"
+            init_db()
+            orders = [
+                ("SCC-FRI", "friday", "", "2026-11-01T01:00:00"),
+                ("SCC-SAT", "saturday", "2026-11-21", "2026-11-01T02:00:00"),
+                ("SCC-SUN", "sunday", "", "2026-11-01T03:00:00"),
+            ]
+            for number, day, pickup_date, stamp in orders:
+                create_order(
+                    {
+                        "order_number": number,
+                        "created_at": stamp,
+                        "customer_name": day,
+                        "customer_email": "ada@example.com",
+                        "customer_phone": "512-555-0100",
+                        "fulfillment": "pickup",
+                        "pickup_day": day,
+                        "pickup_date": pickup_date,
+                        "address": "",
+                        "notes": "",
+                        "items": [],
+                        "subtotal_cents": 400,
+                        "delivery_fee_cents": 0,
+                        "total_cents": 400,
+                        "payment_method": "stripe",
+                        "payment_status": "paid",
+                        "batch_week": "2026-11-16",
+                        "status": "confirmed",
+                    }
+                )
+
+            with client.session_transaction() as sess:
+                sess["admin"] = True
+            headers = {"X-SCC-App": "test-weekend-gate"}
+            dashboard = client.get("/admin?batch=2026-11-16", headers=headers)
+            self.assertEqual(dashboard.status_code, 200)
+            html = dashboard.get_data(as_text=True)
+            self.assertIn("Saturday pickups/deliveries", html)
+            self.assertIn("Sunday market pickups", html)
+            self.assertIn("Friday pickups/deliveries (earlier orders)", html)
+            self.assertIn("Fri · Nov 20", html)
+            self.assertIn("Sun · Nov 22", html)
+            self.assertIn("Saturday, November 21, 2026", html)
+
+            printed = client.get(
+                "/admin/print/orders?batch=2026-11-16", headers=headers
+            )
+            self.assertEqual(printed.status_code, 200)
+            sheet = printed.get_data(as_text=True)
+            self.assertIn("FRIDAY (Friday, November 20)", sheet)
+            self.assertIn("SUNDAY (Sunday, November 22)", sheet)
+            self.assertIn("SATURDAY, NOVEMBER 21, 2026", sheet)
+
+            success = client.get("/order/success/SCC-SUN")
+            self.assertEqual(success.status_code, 200)
+            thanks = success.get_data(as_text=True)
+            self.assertIn("Sunday, November 22", thanks)
+            self.assertIn("Triangle Commons Pocket Park", thanks)
+            self.assertIn("722 W. 46th St.", thanks)
+            self.assertIn("10am", thanks)
+            self.assertIn("no Sunday delivery", thanks)
+
+            legacy = client.get("/order/success/SCC-FRI").get_data(as_text=True)
+            self.assertIn("Friday, November 20", legacy)
+            self.assertNotIn("Saturday pickup is at our cottage", legacy)
+        finally:
+            Config.DATABASE_PATH = old_db
+            Config.PUSH_REGISTER_SECRET = old_secret
             tmp.cleanup()
 
 
