@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Order Cookies — {{ business_name }}{% endblock %}
 {% block meta %}
-  <meta name="description" content="Build a 6-pack or add individual cookies. Order anytime for Friday or Saturday pickup. Weekly cutoff {{ cutoff_display() }} CST.">
+  <meta name="description" content="Build a 6-pack, add individual cookies, or choose a single-flavor minis {{ minis_per_pack }}-pack. Order anytime for Friday or Saturday pickup. Weekly cutoff {{ cutoff_display() }} CST.">
 {% endblock %}
 {% block content %}
   <h1>Place Your Order</h1>
@@ -21,6 +21,8 @@
     action="{{ url_for('order') }}"
     data-price-individual="{{ price_individual }}"
     data-price-six-pack="{{ price_six_pack }}"
+    data-price-minis-pack="{{ price_minis_pack }}"
+    data-minis-per-pack="{{ minis_per_pack }}"
     data-delivery-fee="{{ delivery_fee }}"
     data-delivery-min="{{ delivery_min }}"
     data-allowed-zips='{{ delivery_zips.keys() | list | tojson }}'
@@ -109,6 +111,49 @@
       </div>
       {% endfor %}
       <p id="single-sum" class="section-note" style="margin-top:12px;">No individual cookies selected</p>
+    </div>
+
+    <div class="form-section" id="minis-packs">
+      <h3>Minis Packs — {{ price_minis_pack | money }}</h3>
+      <p class="section-note">
+        Each pack is {{ minis_per_pack }} mini cookies of a single flavor.
+        No mixing — pick a flavor, then how many packs you want.
+      </p>
+      {% for cookie_id, cookie in catalog.items() %}
+      <div class="qty-row">
+        <label for="minis_{{ cookie_id }}">
+          {% if cookie.img_default %}
+          <img
+            class="qty-thumb"
+            src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}"
+            alt=""
+            width="48"
+            height="48"
+            aria-hidden="true"
+          >
+          {% endif %}
+          <span>
+            {{ cookie.name }}
+            <span class="meta">{{ minis_per_pack }} mini cookies · {{ price_minis_pack | money }}</span>
+          </span>
+        </label>
+        <div class="stepper">
+          <button type="button" class="step-btn" data-step="minis_{{ cookie_id }}" data-delta="-1" aria-label="Decrease {{ cookie.name }} minis packs">−</button>
+          <input
+            type="number"
+            id="minis_{{ cookie_id }}"
+            name="minis_{{ cookie_id }}"
+            min="0"
+            max="100"
+            step="1"
+            value="{{ form.get('minis_' + cookie_id, 0) if form else 0 }}"
+            aria-label="{{ cookie.name }} minis packs"
+          >
+          <button type="button" class="step-btn" data-step="minis_{{ cookie_id }}" data-delta="1" aria-label="Increase {{ cookie.name }} minis packs">+</button>
+        </div>
+      </div>
+      {% endfor %}
+      <p id="minis-sum" class="section-note" style="margin-top:12px;">No minis packs selected</p>
     </div>
 
     <div class="form-section">

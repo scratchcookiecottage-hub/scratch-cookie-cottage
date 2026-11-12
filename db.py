@@ -449,7 +449,9 @@ def aggregate_cookie_counts(orders: list[dict]) -> dict[str, int]:
     totals: dict[str, int] = {}
     for order in orders:
         for item in order["items"]:
-            if item.get("kind") == "six_pack_fee":
+            # Minis are a different bake (8 small cookies per pack). Keep them
+            # out of the full-size cookie totals; see aggregate_minis_counts.
+            if item.get("kind") in ("six_pack_fee", "minis_pack"):
                 continue
             key = item.get("cookie_id") or item.get("id")
             if not key:
@@ -460,10 +462,25 @@ def aggregate_cookie_counts(orders: list[dict]) -> dict[str, int]:
     return totals
 
 
+def aggregate_minis_counts(orders: list[dict]) -> dict[str, int]:
+    """Minis packs by flavor. Each unit is one pack, not a full-size cookie."""
+    totals: dict[str, int] = {}
+    for order in orders:
+        for item in order["items"]:
+            if item.get("kind") != "minis_pack":
+                continue
+            key = item.get("cookie_id") or item.get("id")
+            if not key:
+                continue
+            totals[key] = totals.get(key, 0) + int(item["qty"])
+    return totals
+
+
 def aggregate_product_summary(orders: list[dict]) -> dict[str, int]:
-    """High-level product counts: singles cookies, six-packs, etc."""
+    """High-level product counts: singles cookies, six-packs, minis packs."""
     singles = 0
     six_packs = 0
+    minis_packs = 0
     for order in orders:
         for item in order["items"]:
             kind = item.get("kind", "single")
@@ -474,6 +491,8 @@ def aggregate_product_summary(orders: list[dict]) -> dict[str, int]:
                 pass
             elif kind == "six_pack_fee":
                 six_packs += int(item["qty"])
+            elif kind == "minis_pack":
+                minis_packs += int(item["qty"])
     # If older orders only have pack cookies without fee line, derive packs
     if six_packs == 0:
         pack_cookies = 0
@@ -482,4 +501,4 @@ def aggregate_product_summary(orders: list[dict]) -> dict[str, int]:
                 if item.get("kind") == "six_pack_cookie":
                     pack_cookies += int(item["qty"])
         six_packs = pack_cookies // 6
-    return {"singles": singles, "six_packs": six_packs}
+    return {"singles": singles, "six_packs": six_packs, "minis_packs": minis_packs}
