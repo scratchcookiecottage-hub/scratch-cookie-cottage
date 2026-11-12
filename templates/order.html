@@ -122,7 +122,8 @@
       {% for cookie_id, cookie in catalog.items() %}
       <div class="qty-row">
         <label for="minis_{{ cookie_id }}">
-          {% if cookie.img_default %}
+          {# Photos return when Config.SHOW_MINIS_PHOTOS is True. #}
+          {% if show_minis_photos and cookie.img_default %}
           <img
             class="qty-thumb"
             src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}"

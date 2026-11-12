@@ -114,6 +114,7 @@ def inject_globals():
         "price_six_pack": Config.PRICE_SIX_PACK_CENTS,
         "price_minis_pack": Config.PRICE_MINIS_PACK_CENTS,
         "minis_per_pack": Config.MINIS_PER_PACK,
+        "show_minis_photos": Config.SHOW_MINIS_PHOTOS,
         "delivery_min": Config.DELIVERY_MIN_CENTS,
         "delivery_zips": Config.DELIVERY_ZIPS,
         "contact_email": Config.CONTACT_EMAIL,

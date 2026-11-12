@@ -32,6 +32,9 @@ class Config:
     PRICE_MINIS_PACK_CENTS = _int("PRICE_MINIS_PACK_CENTS", 1000)  # $10.00
     # Mini cookies in one pack. One flavor per pack — customers do not mix flavors.
     MINIS_PER_PACK = 8
+    # Flavor photos on the Minis Packs cards and the order-form rows.
+    # Set this to True to show each flavor's catalog image again.
+    SHOW_MINIS_PHOTOS = False
     DELIVERY_FEE_CENTS = _int("DELIVERY_FEE_CENTS", 0)
     DELIVERY_MIN_CENTS = _int("DELIVERY_MIN_CENTS", 2000)  # $20.00 cookie subtotal
     # Local delivery: zips about 20 minutes from 78746 (West Lake Hills).

@@ -214,6 +214,32 @@ class MinisPackTest(unittest.TestCase):
         self.assertIn('data-price-minis-pack="1000"', order)
         self.assertIn('data-minis-per-pack="8"', order)
         self.assertIn("No mixing", order)
+        self.assertNotIn("<img", section)
+        minis_order = order[order.index('id="minis-packs"'):order.index("Your info")]
+        self.assertNotIn("qty-thumb", minis_order)
+        self.assertNotIn("<img", minis_order)
+
+    def test_minis_photos_return_when_the_flag_is_on(self):
+        from app import app
+        from config import Config
+
+        app.config["TESTING"] = True
+        client = app.test_client()
+        previous = Config.SHOW_MINIS_PHOTOS
+        Config.SHOW_MINIS_PHOTOS = True
+        try:
+            home = client.get("/").get_data(as_text=True)
+            start = home.index('id="minis-packs"')
+            section = home[start:home.index("</section>", start)]
+            self.assertIn("has-photo", section)
+            self.assertIn("images/chocolate_chip.jpg", section)
+
+            order = client.get("/order").get_data(as_text=True)
+            minis_order = order[order.index('id="minis-packs"'):order.index("Your info")]
+            self.assertIn("qty-thumb", minis_order)
+            self.assertIn("images/chocolate_chip.jpg", minis_order)
+        finally:
+            Config.SHOW_MINIS_PHOTOS = previous
 
     def test_new_catalog_flavor_gets_a_minis_pack(self):
         from unittest.mock import patch

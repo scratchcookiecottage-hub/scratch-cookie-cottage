@@ -98,16 +98,19 @@
     </p>
     <div class="minis-grid">
       {% for cookie_id, cookie in catalog.items() %}
-      <a class="minis-card" href="{{ url_for('order') }}#minis-packs">
-        {% if cookie.img_default %}
-        <img
-          src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}"
-          alt=""
-          width="88"
-          height="88"
-        >
-        {% else %}
-        <span class="minis-photo-fallback" aria-hidden="true">{{ cookie.name }}</span>
+      <a class="minis-card{% if show_minis_photos %} has-photo{% endif %}" href="{{ url_for('order') }}#minis-packs">
+        {# Photos return when Config.SHOW_MINIS_PHOTOS is True. #}
+        {% if show_minis_photos %}
+          {% if cookie.img_default %}
+          <img
+            src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}"
+            alt=""
+            width="88"
+            height="88"
+          >
+          {% else %}
+          <span class="minis-photo-fallback" aria-hidden="true">{{ cookie.name }}</span>
+          {% endif %}
         {% endif %}
         <div class="minis-card-body">
           <span class="minis-badge">{{ minis_per_pack }}-pack</span>
