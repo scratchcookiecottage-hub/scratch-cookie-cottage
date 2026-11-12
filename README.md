@@ -6,10 +6,10 @@ Flask storefront for **Scratch Cookie Cottage**:
 - **Build-your-own 6-pack** (half dozen) — $20.00  
 - Flavors: Brown Butter Chocolate Chip, Macadamia White Chocolate, Salted Caramel Chocolate Pecan, White Miso Peanut Butter  
 - **Order anytime** — no closed storefront for cookies  
-- **Pickup calendar:** choose a future Friday or Saturday  
-- **Weekly cutoff:** after Wednesday 11:59 PM CST, same-week Fri/Sat are greyed out  
+- **Pickup calendar:** choose a future Saturday or Sunday  
+- **Weekly cutoff:** after Wednesday 11:59 PM CST, same-week Sat/Sun are greyed out  
 - **Stripe** card checkout (embedded on-site) + email receipt  
-- **Admin** bake sheet: cookie counts by flavor, orders, Fri/Sat split  
+- **Admin** bake sheet: cookie counts by flavor, orders, Sat/Sun split  
 - **Merch** via Printify Pop-Up Store (24/7, third-party fulfillment)
 
 ## Quick start (Windows)
@@ -87,9 +87,9 @@ Add image URLs in `config.py` under `salted_caramel` (`img_default` / `img_hover
 
 ## Ordering & weekly pickup cutoff
 
-Cookie orders are accepted **any day**. Customers pick a **Friday or Saturday** on the calendar.
+Cookie orders are accepted **any day**. Customers pick a **Saturday or Sunday** on the calendar. Saturday is cottage pickup or local delivery. Sunday is pickup only at the Triangle Farmers Market, Triangle Commons Pocket Park, 722 W. 46th St., Austin, TX 78751 (near 45th and Guadalupe), 10am–2pm, starting November 15, 2026.
 
-| When you order | Same-week Fri/Sat | Future weekends |
+| When you order | Same-week Sat/Sun | Future weekends |
 |----------------|-------------------|-----------------|
 | Before Wed 11:59 PM CST | **Available** | Available |
 | After Wed 11:59 PM CST | **Greyed out** | Available |
@@ -103,7 +103,7 @@ Batch week in admin is based on the **chosen pickup date’s weekend**, not the 
 1. Log in at `/admin`  
 2. Pick the batch week  
 3. **Cookie counts** — how many of each flavor to bake (singles + 6-pack mix)  
-4. **Print order list** — names, Fri/Sat, items, paid vs collect  
+4. **Print order list** — names, Sat/Sun, items, paid vs collect  
 5. **Print bake sheet** — totals for the oven  
 
 ## Deploy

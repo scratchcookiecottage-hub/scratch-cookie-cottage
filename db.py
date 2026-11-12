@@ -232,7 +232,7 @@ def list_orders(
             params.append(batch_week)
         if paid_only:
             sql += " AND payment_status = 'paid' AND status != 'cancelled'"
-        sql += " ORDER BY COALESCE(NULLIF(pickup_date, ''), '9999-99-99') ASC, CASE pickup_day WHEN 'friday' THEN 0 WHEN 'saturday' THEN 1 ELSE 2 END, created_at ASC"
+        sql += " ORDER BY COALESCE(NULLIF(pickup_date, ''), '9999-99-99') ASC, CASE pickup_day WHEN 'friday' THEN 0 WHEN 'saturday' THEN 1 WHEN 'sunday' THEN 2 ELSE 3 END, created_at ASC"
         rows = conn.execute(sql, params).fetchall()
     return [_row_to_order(r) for r in rows]
 

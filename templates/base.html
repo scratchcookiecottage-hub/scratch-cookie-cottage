@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ business_name }}{% endblock %}</title>
   {% block meta %}
-  <meta name="description" content="Small-batch cookies from Scratch Cookie Cottage in Austin, Texas. Order online for Friday or Saturday pickup.">
+  <meta name="description" content="Small-batch cookies from Scratch Cookie Cottage in Austin, Texas. Saturday cottage pickup, or Sunday pickup at the Triangle Farmers Market, 722 W. 46th St., 10am–2pm.">
   {% endblock %}
   <link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
   {% block og %}
@@ -84,6 +84,12 @@
           <span aria-hidden="true">·</span>
           <a href="{{ instagram_url }}" target="_blank" rel="noopener">Instagram</a>
         {% endif %}
+      </p>
+      <p>
+        Saturday: cottage pickup or local delivery.
+        Sunday pickup only at the {{ sunday_market.name }},
+        {{ sunday_market.place }}, {{ sunday_market.address }}
+        ({{ sunday_market.near }}), {{ sunday_market.hours }}.
       </p>
       <p>
         <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>

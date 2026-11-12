@@ -1,9 +1,13 @@
 """
 Pickup scheduling with a weekly Wednesday cutoff (America/Chicago by default).
 
-Cookie orders are accepted any day. Customers pick a future Friday or Saturday.
-Same-week Fri/Sat stay available only until Wednesday 11:59 PM local.
+Cookie orders are accepted any day. Customers pick a future Saturday or Sunday.
+Same-week Sat/Sun stay available only until Wednesday 11:59 PM local.
 After that cutoff, those dates are locked; next week (and further) remain open.
+
+Saturday is cottage pickup or local delivery. Sunday is pickup only at the
+Triangle Farmers Market, and it shares the Monday batch key with that
+weekend's Saturday (Python's weekday() treats Sunday as the end of the week).
 """
 
 from datetime import date, datetime, timedelta
@@ -12,6 +16,9 @@ from typing import Any, Optional
 import pytz
 
 from config import Config
+
+# Saturday=5, Sunday=6. Friday (4) is no longer offered.
+ALLOWED_PICKUP_WEEKDAYS = (5, 6)
 
 
 def now_local() -> datetime:
@@ -27,7 +34,7 @@ def monday_of(d: date) -> date:
 
 
 def week_cutoff_end(monday: date) -> datetime:
-    """Last instant orders may select Fri/Sat of the week starting at monday."""
+    """Last instant orders may select Sat/Sun of the week starting at monday."""
     cut_day = monday + timedelta(days=Config.CUTOFF_WEEKDAY)
     naive = datetime(
         cut_day.year,
@@ -41,21 +48,32 @@ def week_cutoff_end(monday: date) -> datetime:
     return _tz().localize(naive)
 
 
+def sunday_market_start() -> date:
+    return date.fromisoformat(Config.SUNDAY_MARKET["starts_iso"])
+
+
 def is_pickup_date_available(
     pickup: date, at: Optional[datetime] = None
 ) -> tuple[bool, str]:
     """
     Returns (available, reason_if_not).
-    Only Fridays and Saturdays can be selected.
+    Only Saturdays and Sundays can be selected.
+    Sundays before the farmers-market start date are not offered.
     """
     now = at.astimezone(_tz()) if at else now_local()
     today = now.date()
 
-    if pickup.weekday() not in (4, 5):  # Friday=4, Saturday=5
-        return False, "Pickup is only available on Fridays and Saturdays."
+    if pickup.weekday() not in ALLOWED_PICKUP_WEEKDAYS:
+        return False, "Pickup is only available on Saturdays and Sundays."
 
     if pickup < today:
         return False, "That date has already passed."
+
+    if pickup.weekday() == 6 and pickup < sunday_market_start():
+        market = Config.SUNDAY_MARKET
+        return False, (
+            f"Sunday market pickup starts {market['starts']} at the {market['name']}."
+        )
 
     monday = monday_of(pickup)
     cutoff = week_cutoff_end(monday)
@@ -78,14 +96,14 @@ def batch_week_from_pickup_date(pickup: date | str) -> str:
 def current_batch_week(at: Optional[datetime] = None) -> str:
     """
     Default admin batch: the next weekend customers can still order for.
-    (Earliest week whose Fri/Sat are still available.)
+    (Earliest week whose Sat/Sun are still available.)
     """
     now = at.astimezone(_tz()) if at else now_local()
     today = now.date()
-    # Walk forward up to 3 weeks to find first available Fri or Sat
+    # Walk forward up to 3 weeks to find first available Sat or Sun
     for i in range(21):
         d = today + timedelta(days=i)
-        if d.weekday() in (4, 5):
+        if d.weekday() in ALLOWED_PICKUP_WEEKDAYS:
             ok, _ = is_pickup_date_available(d, now)
             if ok:
                 return batch_week_from_pickup_date(d)
@@ -103,27 +121,38 @@ def batch_week_label(batch_week: str) -> str:
 
 
 def batch_pickup_dates(batch_week: str) -> dict[str, str]:
-    """Friday and Saturday labels for a batch week (Monday key)."""
+    """Saturday and Sunday labels for a batch week, plus legacy Friday.
+
+    Sunday is the day after that week's Saturday, so it stays on the same
+    Monday key. Friday labels remain so older orders still render.
+    """
     try:
         monday = datetime.strptime(batch_week, "%Y-%m-%d")
         friday = monday + timedelta(days=4)
         saturday = monday + timedelta(days=5)
+        sunday = monday + timedelta(days=6)
         return {
             "friday": friday.strftime("%A, %B %d"),
             "saturday": saturday.strftime("%A, %B %d"),
+            "sunday": sunday.strftime("%A, %B %d"),
             "friday_short": friday.strftime("%b %d"),
             "saturday_short": saturday.strftime("%b %d"),
+            "sunday_short": sunday.strftime("%b %d"),
             "friday_iso": friday.strftime("%Y-%m-%d"),
             "saturday_iso": saturday.strftime("%Y-%m-%d"),
+            "sunday_iso": sunday.strftime("%Y-%m-%d"),
         }
     except ValueError:
         return {
             "friday": "Friday",
             "saturday": "Saturday",
+            "sunday": "Sunday",
             "friday_short": "Friday",
             "saturday_short": "Saturday",
+            "sunday_short": "Sunday",
             "friday_iso": "",
             "saturday_iso": "",
+            "sunday_iso": "",
         }
 
 
@@ -131,7 +160,7 @@ def list_pickup_slots(
     weeks_ahead: Optional[int] = None, at: Optional[datetime] = None
 ) -> list[dict[str, Any]]:
     """
-    Upcoming Friday/Saturday slots for the calendar.
+    Upcoming Saturday/Sunday slots for the calendar.
     Each: {date, weekday, label, available, reason, batch_week, is_same_week}
     """
     now = at.astimezone(_tz()) if at else now_local()
@@ -140,18 +169,19 @@ def list_pickup_slots(
     this_monday = monday_of(today)
 
     slots: list[dict[str, Any]] = []
-    # Cover from this week's Friday through weeks_ahead weekends
-    start = this_monday + timedelta(days=4)  # this Friday
-    end = this_monday + timedelta(weeks=weeks, days=5)  # last Saturday
+    # Cover from this week's Saturday through weeks_ahead weekends
+    start = this_monday + timedelta(days=5)  # this Saturday
+    end = this_monday + timedelta(weeks=weeks, days=6)  # last Sunday
 
     d = start
     while d <= end:
-        if d.weekday() in (4, 5):
+        if d.weekday() in ALLOWED_PICKUP_WEEKDAYS:
             available, reason = is_pickup_date_available(d, now)
+            weekday = "saturday" if d.weekday() == 5 else "sunday"
             slots.append(
                 {
                     "date": d.isoformat(),
-                    "weekday": "friday" if d.weekday() == 4 else "saturday",
+                    "weekday": weekday,
                     "label": d.strftime("%A, %B %d, %Y"),
                     "short_label": d.strftime("%b %d"),
                     "day_num": d.day,
@@ -161,6 +191,7 @@ def list_pickup_slots(
                     "reason": reason,
                     "batch_week": batch_week_from_pickup_date(d),
                     "is_same_week": monday_of(d) == this_monday,
+                    "delivery_ok": weekday == "saturday",
                 }
             )
         d += timedelta(days=1)
@@ -169,34 +200,34 @@ def list_pickup_slots(
 
 
 def same_week_status(at: Optional[datetime] = None) -> dict[str, Any]:
-    """Messaging for the current calendar week’s Fri/Sat."""
+    """Messaging for the current calendar week’s Sat/Sun."""
     now = at.astimezone(_tz()) if at else now_local()
     today = now.date()
     monday = monday_of(today)
-    friday = monday + timedelta(days=4)
     saturday = monday + timedelta(days=5)
+    sunday = monday + timedelta(days=6)
     cutoff = week_cutoff_end(monday)
-    fri_ok, _ = is_pickup_date_available(friday, now)
     sat_ok, _ = is_pickup_date_available(saturday, now)
-    open_same = fri_ok or sat_ok
+    sun_ok, _ = is_pickup_date_available(sunday, now)
+    open_same = sat_ok or sun_ok
 
     if open_same:
         msg = (
-            f"Order anytime. Same-weekend pickup (Fri/Sat) is available "
+            f"Order anytime. Same-weekend pickup (Sat/Sun) is available "
             f"through {cutoff_display()} ({Config.TIMEZONE.split('/')[-1]})."
         )
     else:
         msg = (
             f"Same-weekend pickup has closed (cutoff was {cutoff_display()}). "
-            f"You can still order for a future Friday or Saturday."
+            f"You can still order for a future Saturday or Sunday."
         )
 
     return {
         "same_week_open": open_same,
         "message": msg,
         "cutoff": cutoff.isoformat(),
-        "friday": friday.isoformat(),
         "saturday": saturday.isoformat(),
+        "sunday": sunday.isoformat(),
     }
 
 

@@ -91,8 +91,11 @@
       <li><span>Individual singles sold</span><strong>{{ products.singles }}</strong></li>
       <li><span>6-packs sold</span><strong>{{ products.six_packs }}</strong></li>
       <li><span>Minis {{ minis_per_pack }}-packs sold</span><strong>{{ products.minis_packs }}</strong></li>
-      <li><span>Friday pickups/deliveries</span><strong>{{ pickup_friday_orders }}</strong></li>
       <li><span>Saturday pickups/deliveries</span><strong>{{ pickup_saturday_orders }}</strong></li>
+      <li><span>Sunday market pickups</span><strong>{{ pickup_sunday_orders }}</strong></li>
+      {% if pickup_friday_orders %}
+      <li><span>Friday pickups/deliveries (earlier orders)</span><strong>{{ pickup_friday_orders }}</strong></li>
+      {% endif %}
     </ul>
   </div>
 
@@ -145,6 +148,8 @@
               Fri · {{ pickup_dates.friday_short }}
             {% elif o.pickup_day == 'saturday' %}
               Sat · {{ pickup_dates.saturday_short }}
+            {% elif o.pickup_day == 'sunday' %}
+              Sun · {{ pickup_dates.sunday_short }}
             {% else %}
               —
             {% endif %}

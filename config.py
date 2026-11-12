@@ -18,13 +18,26 @@ class Config:
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
 
     TIMEZONE = os.getenv("TIMEZONE", "America/Chicago")
-    # Weekly pickup cutoff: after this instant, same-week Fri/Sat cannot be selected.
+    # Weekly pickup cutoff: after this instant, same-week Sat/Sun cannot be selected.
     # Wednesday=2, hour/minute local to TIMEZONE (CST/CDT for America/Chicago).
     CUTOFF_WEEKDAY = _int("CUTOFF_WEEKDAY", 2)  # Wednesday
     CUTOFF_HOUR = _int("CUTOFF_HOUR", 23)
     CUTOFF_MINUTE = _int("CUTOFF_MINUTE", 59)
-    # How many weeks of Friday/Saturday slots to show on the calendar
+    # How many weeks of Saturday/Sunday slots to show on the calendar
     PICKUP_WEEKS_AHEAD = _int("PICKUP_WEEKS_AHEAD", 8)
+
+    # Sunday is pickup only at this market. No Sunday delivery.
+    # starts_iso is the first Sunday customers may choose.
+    SUNDAY_MARKET = {
+        "name": "Triangle Farmers Market",
+        "place": "Triangle Commons Pocket Park",
+        "address": "722 W. 46th St., Austin, TX 78751",
+        "near": "near 45th and Guadalupe",
+        "hours": "10am–2pm",
+        "starts": "November 15, 2026",
+        "starts_iso": "2026-11-15",
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=722+W+46th+St,+Austin,+TX+78751",
+    }
 
     # Individual cookie, half-dozen (6-pack), and single-flavor minis pack prices in cents
     PRICE_INDIVIDUAL_CENTS = _int("PRICE_INDIVIDUAL_CENTS", 400)  # $4.00
@@ -99,7 +112,10 @@ class Config:
     TAGLINE = ""
     PICKUP_NOTE = os.getenv(
         "PICKUP_NOTE",
-        "Pickup is at our cottage. We’ll email you the address after you order.",
+        "Saturday pickup is at our cottage. We’ll email you the address after you order. "
+        "Sunday pickup is at the Triangle Farmers Market, Triangle Commons Pocket Park, "
+        "722 W. 46th St., Austin, TX 78751 (near 45th and Guadalupe), 10am–2pm. "
+        "Sunday is pickup only.",
     ).strip()
     COTTAGE_FOOD_DISCLOSURE = (
         "THIS PRODUCT WAS PRODUCED IN A PRIVATE RESIDENCE THAT IS NOT "
@@ -114,22 +130,31 @@ class Config:
     STORY_PARAGRAPHS = [
         "Scratch Cookie Cottage is a small-batch bakery in the Austin / West Lake Hills area. Every cookie is mixed, scooped, and baked from scratch — no mixes, no shortcuts.",
         "We keep the menu focused: brown-butter chocolate chip, macadamia white chocolate, salted caramel chocolate pecan, and our savory-sweet White Miso Peanut Butter. When the season calls for it, a fifth cookie rotates through.",
-        "Order online anytime for Friday or Saturday pickup at our cottage. Same-weekend boxes close after Wednesday 11:59 PM Central — after that, pick a future weekend and we’ll bake for you.",
+        "Order online anytime for Saturday cottage pickup or local delivery, or Sunday pickup at the Triangle Farmers Market (Triangle Commons Pocket Park, 722 W. 46th St., Austin, TX 78751, near 45th and Guadalupe, 10am–2pm). Same-weekend Saturday and Sunday close after Wednesday 11:59 PM Central — after that, pick a future weekend and we’ll bake for you.",
     ]
     # Extra photos for /story. Paths relative to static/. Empty = use catalog cookie photos.
     STORY_IMAGES = []
 
-    # Farmers markets shown on /markets. Leave empty until real dates are confirmed.
-    # Example entry:
-    # {
-    #     "name": "Example Farmers Market",
-    #     "area": "Austin, TX",
-    #     "when": "Saturdays, 9am–1pm",
-    #     "maps_url": "https://maps.google.com/?q=Example+Farmers+Market+Austin",
-    #     "notes": "Pre-order online, then pick up Friday or Saturday.",
-    #     "active": True,
-    # }
-    MARKETS = []
+    # Farmers markets shown on /markets.
+    MARKETS = [
+        {
+            "name": SUNDAY_MARKET["name"],
+            "area": (
+                f"{SUNDAY_MARKET['place']}, {SUNDAY_MARKET['address']} "
+                f"({SUNDAY_MARKET['near']})"
+            ),
+            "when": (
+                f"Sundays, {SUNDAY_MARKET['hours']}, "
+                f"starting {SUNDAY_MARKET['starts']}"
+            ),
+            "maps_url": SUNDAY_MARKET["maps_url"],
+            "notes": (
+                "Pickup only. Order online and choose Sunday. "
+                "No Sunday delivery. Saturday cottage pickup and Saturday delivery are unchanged."
+            ),
+            "active": True,
+        },
+    ]
 
     DATABASE_PATH = os.getenv(
         "DATABASE_PATH",

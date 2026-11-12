@@ -70,6 +70,6 @@ For a first taste, try White Miso Peanut Butter beside a cookie you already know
 
 White Miso Peanut Butter is made for curious cookie people and lifelong peanut butter fans alike. It is creamy, gently savory, and still very much a treat.
 
-We mix, scoop, and bake from scratch in small batches in the Austin/West Lake Hills area. [Order online](/order) for Friday or Saturday cottage pickup; same-weekend ordering closes Wednesday at 11:59 p.m. Central. Read more [about our cottage kitchen](/story).
+We mix, scoop, and bake from scratch in small batches in the Austin/West Lake Hills area. [Order online](/order) for Saturday cottage pickup or delivery, or Sunday pickup at the Triangle Farmers Market (Triangle Commons Pocket Park, 722 W. 46th St., Austin, TX 78751, 10am–2pm); same-weekend ordering closes Wednesday at 11:59 p.m. Central. Read more [about our cottage kitchen](/story).
 
 **Add White Miso Peanut Butter to your six-pack →** [/order](/order)

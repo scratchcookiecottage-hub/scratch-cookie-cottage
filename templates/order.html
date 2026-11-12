@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Order Cookies — {{ business_name }}{% endblock %}
 {% block meta %}
-  <meta name="description" content="Build a 6-pack, add individual cookies, or choose a single-flavor minis {{ minis_per_pack }}-pack. Order anytime for Friday or Saturday pickup. Weekly cutoff {{ cutoff_display() }} CST.">
+  <meta name="description" content="Build a 6-pack, add individual cookies, or choose a single-flavor minis {{ minis_per_pack }}-pack. Order anytime for Saturday cottage pickup or Sunday pickup at the {{ sunday_market.name }} ({{ sunday_market.address }}, {{ sunday_market.hours }}). Weekly cutoff {{ cutoff_display() }} CST.">
 {% endblock %}
 {% block content %}
   <h1>Place Your Order</h1>
   <p class="lead">
-    Order anytime for Friday or Saturday pickup at our cottage.
-    We’ll email you the address after you order.
+    Order anytime for Saturday pickup at our cottage, or Sunday pickup only
+    at the {{ sunday_market.name }}.
+    We’ll email the cottage address after a Saturday order.
   </p>
 
   <div class="banner {{ 'open' if same_week.same_week_open else 'closed' }}">
@@ -179,10 +180,15 @@
     <div class="form-section">
       <h3>Pickup date</h3>
       <p class="section-note">
-        Select a <strong>Friday</strong> or <strong>Saturday</strong>.
+        Select a <strong>Saturday</strong> or <strong>Sunday</strong>.
         Same-week dates lock after <strong>{{ cutoff_display() }} CST</strong> —
         those cells appear greyed out.
-        {% if pickup_note %} {{ pickup_note }}{% endif %}
+        Saturday is cottage pickup or local delivery.
+        Sunday is pickup only at the {{ sunday_market.name }},
+        {{ sunday_market.place }}, {{ sunday_market.address }}
+        ({{ sunday_market.near }}), {{ sunday_market.hours }},
+        starting {{ sunday_market.starts }}.
+        We’ll email the cottage address after a Saturday order.
       </p>
 
       <input type="hidden" name="pickup_date" id="pickup_date" value="{{ form.get('pickup_date', '') if form else '' }}">
@@ -218,15 +224,22 @@
           Pickup
         </label>
         <label>
-          <input type="radio" name="fulfillment" value="delivery"
+          <input type="radio" name="fulfillment" value="delivery" id="fulfillment-delivery"
             {% if form and form.get('fulfillment') == 'delivery' %}checked{% endif %}>
           Local delivery
           {% if delivery_fee %}(+{{ delivery_fee | money }}){% endif %}
         </label>
       </div>
+      <p id="sunday-market-note" class="section-note sunday-market-note" hidden>
+        Sunday is pickup only at the {{ sunday_market.name }},
+        {{ sunday_market.place }}, {{ sunday_market.address }}
+        ({{ sunday_market.near }}), {{ sunday_market.hours }}.
+        Delivery is not available on Sunday.
+      </p>
       <p class="section-note">
-        Delivery is available for cookie totals of {{ delivery_min | money }} or more,
+        Saturday delivery is available for cookie totals of {{ delivery_min | money }} or more,
         to ZIP codes in our service area.
+        Sunday has no delivery option.
       </p>
       <p id="delivery-min-feedback" class="pack-hint" style="margin-top:4px;"></p>
       <div id="delivery-fields">

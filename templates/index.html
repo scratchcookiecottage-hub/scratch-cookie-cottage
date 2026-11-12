@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ business_name }}{% endblock %}
 {% block meta %}
-  <meta name="description" content="Handcrafted cookies in Austin, Texas. ${{ '%.2f'|format(price_individual / 100) }} each, a build-your-own 6-pack for ${{ '%.2f'|format(price_six_pack / 100) }}, or a single-flavor minis {{ minis_per_pack }}-pack for ${{ '%.2f'|format(price_minis_pack / 100) }}. Order online for Friday or Saturday pickup.">
+  <meta name="description" content="Handcrafted cookies in Austin, Texas. ${{ '%.2f'|format(price_individual / 100) }} each, or a build-your-own 6-pack for ${{ '%.2f'|format(price_six_pack / 100) }}. Saturday cottage pickup, or Sunday pickup at the {{ sunday_market.name }} ({{ sunday_market.address }}, {{ sunday_market.hours }}).">
 {% endblock %}
 {% block content %}
   <section class="hero">
@@ -14,7 +14,7 @@
     >
     <p class="lead hero-lead">
       Small-batch cookies, mixed and baked in a cottage kitchen.
-      Order anytime for Friday or Saturday pickup at our address.
+      Order anytime for Saturday pickup at our cottage, or Sunday pickup at the {{ sunday_market.name }}.
     </p>
     <div class="btn-row">
       <a class="btn" href="{{ url_for('order') }}">Order for This Weekend</a>
@@ -37,7 +37,6 @@
   <p class="lead">
     ${{ '%.2f'|format(price_individual / 100) }} each
     · Build-your-own 6-pack ${{ '%.2f'|format(price_six_pack / 100) }}
-    · Minis {{ minis_per_pack }}-pack ${{ '%.2f'|format(price_minis_pack / 100) }}
   </p>
 
   <div class="cookie-grid">
@@ -89,54 +88,21 @@
     {% endfor %}
   </div>
 
-  <section id="minis-packs" class="minis-section" aria-labelledby="minis-heading">
-    <h2 id="minis-heading" class="section-title">Minis Packs</h2>
-    <p class="lead">
-      {{ minis_per_pack }} mini cookies, all one flavor.
-      {{ price_minis_pack | money }} a pack.
-      Each pack is a single flavor — no mixing.
-    </p>
-    <div class="minis-grid">
-      {% for cookie_id, cookie in catalog.items() %}
-      <a class="minis-card{% if show_minis_photos %} has-photo{% endif %}" href="{{ url_for('order') }}#minis-packs">
-        {# Photos return when Config.SHOW_MINIS_PHOTOS is True. #}
-        {% if show_minis_photos %}
-          {% if cookie.img_default %}
-          <img
-            src="{% if cookie.img_default.startswith('http') %}{{ cookie.img_default }}{% else %}{{ url_for('static', filename=cookie.img_default) }}{% endif %}"
-            alt=""
-            width="88"
-            height="88"
-          >
-          {% else %}
-          <span class="minis-photo-fallback" aria-hidden="true">{{ cookie.name }}</span>
-          {% endif %}
-        {% endif %}
-        <div class="minis-card-body">
-          <span class="minis-badge">{{ minis_per_pack }}-pack</span>
-          <h3 class="script">{{ cookie.name }}</h3>
-          <span class="minis-detail">{{ minis_per_pack }} mini cookies</span>
-          <span class="price-tag">{{ price_minis_pack | money }}</span>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-    <div class="btn-row">
-      <a class="btn" href="{{ url_for('order') }}#minis-packs">Order Minis Packs</a>
-    </div>
-  </section>
-
   <div class="panel">
     <h2>How Pre-Ordering Works</h2>
     <p>
-      Order <strong>anytime</strong> and pick a <strong>Friday or Saturday</strong>
-      on the calendar. Pickup is at our cottage — we’ll email you the address
-      after you order. Card payment is due when you place the order, then we bake your box.
+      Order <strong>anytime</strong> and pick a <strong>Saturday or Sunday</strong>
+      on the calendar. Saturday pickup is at our cottage — we’ll email you the address
+      after you order. Sunday is pickup only at the {{ sunday_market.name }},
+      {{ sunday_market.place }}, {{ sunday_market.address }}
+      ({{ sunday_market.near }}), {{ sunday_market.hours }},
+      starting {{ sunday_market.starts }}.
+      Card payment is due when you place the order, then we bake your box.
     </p>
     <p>
       Weekly bake cutoff is <strong>{{ cutoff_display() }} (CST)</strong>.
-      Order before then for <strong>this weekend</strong>.
-      After the cutoff, same-week dates grey out — choose a future Friday or Saturday instead.
+      Order before then for <strong>this weekend’s Saturday and Sunday</strong>.
+      After the cutoff, same-week dates grey out — choose a future Saturday or Sunday instead.
     </p>
   </div>
 
@@ -145,8 +111,7 @@
     <p><strong>Individual cookies</strong> — {{ price_individual | money }} each</p>
     <p><strong>Build-your-own 6-pack</strong> (half dozen) — {{ price_six_pack | money }}</p>
     <p>Mix any of our flavors in your 6-pack.</p>
-    <p><strong>Minis pack</strong> — {{ price_minis_pack | money }} for {{ minis_per_pack }} mini cookies of one flavor. No mixing.</p>
-    <p>Local delivery is available for orders of {{ delivery_min | money }} or more, within our delivery ZIP area.</p>
+    <p>Saturday local delivery is available for orders of {{ delivery_min | money }} or more, within our delivery ZIP area. Sunday is pickup only.</p>
   </div>
 
   <div class="btn-row">

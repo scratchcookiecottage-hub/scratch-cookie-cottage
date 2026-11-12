@@ -11,7 +11,7 @@ A good gift does not need to be complicated. It needs to feel chosen.
 
 A mixed box of fresh cookies does that beautifully. It is easy to share, welcome at almost any gathering, and personal enough to say, “I thought about what you might like.” With several flavors in the box, there is room for the classic-cookie person, the sweet-and-salty fan, and the friend who always wants something new.
 
-Scratch Cookie Cottage offers individual cookies and a build-your-own six-pack for Friday or Saturday pickup in the Austin/West Lake Hills area. Here is how to turn that mix into a thoughtful local cookie gift.
+Scratch Cookie Cottage offers individual cookies and a build-your-own six-pack for Saturday pickup or delivery, or Sunday market pickup, in the Austin/West Lake Hills area. Here is how to turn that mix into a thoughtful local cookie gift.
 
 ## Start with the Occasion
 
@@ -92,13 +92,14 @@ Check the live order page before naming a seasonal flavor.
 
 Scratch Cookie Cottage bakes on a weekly rhythm, so timing is part of the plan.
 
-- Order online and choose a Friday or Saturday.
+- Order online and choose a Saturday or Sunday.
 - Place a same-weekend order by Wednesday at 11:59 p.m. Central.
-- Cottage pickup details are emailed after ordering.
+- Saturday cottage pickup details are emailed after ordering.
+- Sunday pickup is at the Triangle Farmers Market, Triangle Commons Pocket Park, 722 W. 46th St., Austin, TX 78751 (near 45th and Guadalupe), 10am–2pm. No Sunday delivery.
 - Local delivery is available for cookie totals of $20 or more within the ZIP codes shown on the order page, with a $5 fee.
 - For events, offices, gift boxes, or larger standing orders, [send an inquiry](/wholesale) with the date, quantity, preferred flavors, and fulfillment needs.
 
-If the gift is tied to a firm date, order early. A future Friday or Saturday can still be selected after the current week’s cutoff.
+If the gift is tied to a firm date, order early. A future Saturday or Sunday can still be selected after the current week’s cutoff.
 
 ## A Local Gift, Baked from Scratch
 

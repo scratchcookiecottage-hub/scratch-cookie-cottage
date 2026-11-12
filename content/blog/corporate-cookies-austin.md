@@ -9,11 +9,11 @@ draft: false
 
 Office food does not have to be an afterthought. A fresh cookie box is one of the easiest ways to make a meeting feel considered, thank a client without being stuffy, or give a team something they will actually finish.
 
-Scratch Cookie Cottage bakes small-batch cookies from scratch in the Austin / West Lake Hills area. Orders are fulfilled on Friday and Saturday, with same-weekend cutoff Wednesday at 11:59 p.m. Central. That schedule works especially well for end-of-week gatherings, Monday planning snacks ordered ahead, and thoughtful gifts that arrive on a predictable weekend rhythm.
+Scratch Cookie Cottage bakes small-batch cookies from scratch in the Austin / West Lake Hills area. Orders are fulfilled on Saturday (cottage pickup or local delivery) and Sunday (Triangle Farmers Market pickup only, 10am–2pm at Triangle Commons Pocket Park, 722 W. 46th St., Austin, TX 78751), with same-weekend cutoff Wednesday at 11:59 p.m. Central. That schedule works especially well for weekend gatherings, Monday planning snacks ordered ahead, and thoughtful gifts that arrive on a predictable weekend rhythm.
 
 ## When Cookies Work Better Than Another Gift Card
 
-### Team meetings and Friday wrap-ups
+### Team meetings and weekend gatherings
 
 A mixed six-pack—or a few of them—covers different tastes without forcing a group decision. Brown Butter Chocolate Chip anchors the box. Macadamia White Chocolate, Salted Caramel Chocolate Pecan, and White Miso Peanut Butter add range.
 
@@ -38,7 +38,7 @@ If you need a handful of boxes for a huddle or desk drop:
 - Cookies are $4 each
 - Build-your-own six-packs are $20
 - Mix any current flavors
-- Choose Friday or Saturday
+- Choose Saturday (cottage pickup or delivery) or Sunday (market pickup only)
 - Cottage pickup address is emailed after ordering
 - Local delivery is available on cookie totals of $20 or more within the ZIP codes listed on the order page ($5 fee)
 
